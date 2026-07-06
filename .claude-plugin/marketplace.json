@@ -1,0 +1,15 @@
+{
+  "name": "dv-claude-dev-market",
+  "description": "BarabashkaD's personal marketplace of Claude Code plugins/skills",
+  "owner": {
+    "name": "BarabashkaD"
+  },
+  "plugins": [
+    {
+      "name": "python-venv-manager",
+      "description": "Global Python environment manager for Claude skills. Creates and reuses one virtual environment per skill under a per-user Claude venvs directory, so environments persist across sessions and projects instead of being rebuilt every time. Works on Linux, macOS, and Windows.",
+      "version": "1.2.0",
+      "source": "./plugins/python-venv-manager"
+    }
+  ]
+}

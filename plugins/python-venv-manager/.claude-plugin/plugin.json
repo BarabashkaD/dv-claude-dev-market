@@ -1,0 +1,8 @@
+{
+  "name": "python-venv-manager",
+  "version": "1.2.0",
+  "description": "Global Python environment manager for Claude skills. Creates and reuses one virtual environment per skill under a per-user Claude venvs directory, so environments persist across sessions and projects instead of being rebuilt every time. Works on Linux, macOS, and Windows.",
+  "author": {
+    "name": "BarabashkaD"
+  }
+}
