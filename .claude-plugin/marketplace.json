@@ -10,6 +10,12 @@
       "description": "Global Python environment manager for Claude skills. Creates and reuses one virtual environment per skill under a per-user Claude venvs directory, so environments persist across sessions and projects instead of being rebuilt every time. Works on Linux, macOS, and Windows.",
       "version": "1.2.0",
       "source": "./plugins/python-venv-manager"
+    },
+    {
+      "name": "tech-doc-to-markdown",
+      "description": "Convert technical documentation (datasheets, reference and service manuals, schematics, standards, application notes) from PDF, scanned PDF, DjVu, DOC/DOCX, RTF, ODT, EPUB or page images into faithful, verified Markdown where tables, block diagrams, timing diagrams, bit fields, pinouts, register maps and dot patterns become text. Classifies the document first, then runs the transcription in a dedicated cold-context subagent, verifies it with self-check scripts and an adversarial fidelity review, and can split a long document into an index plus parts.",
+      "version": "1.0.0",
+      "source": "./plugins/tech-doc-to-markdown"
     }
   ]
 }
