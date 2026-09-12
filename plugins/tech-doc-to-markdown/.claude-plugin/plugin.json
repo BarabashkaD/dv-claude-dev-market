@@ -1,0 +1,8 @@
+{
+  "name": "tech-doc-to-markdown",
+  "version": "1.0.0",
+  "description": "Convert technical documentation (datasheets, reference and service manuals, schematics, standards, application notes) from PDF, scanned PDF, DjVu, DOC/DOCX, RTF, ODT, EPUB or page images into faithful, verified Markdown where tables, block diagrams, timing diagrams, bit fields, pinouts, register maps and dot patterns become text. Classifies the document first, then runs the transcription in a dedicated cold-context subagent, verifies it with self-check scripts and an adversarial fidelity review, and can split a long document into an index plus parts.",
+  "author": {
+    "name": "BarabashkaD"
+  }
+}
