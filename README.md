@@ -18,6 +18,12 @@ Then install a plugin from it:
 
 ## Catalog
 
+### CAD
+
+| Plugin | What it does |
+|---|---|
+| [`dv-freecad-harness-pitfalls`](plugins/dv-freecad-harness-pitfalls) | Records the `cli-anything-freecad` commands that return success and produce nothing — sketch/pad, boolean rendering, DXF and SVG export, TechDraw, volume measurement, wires, spreadsheet aliases — each with the working alternative, plus the recipe → `freecadcmd` → own-writer pipeline that does work. |
+
 ### Documentation
 
 | Plugin | What it does |
