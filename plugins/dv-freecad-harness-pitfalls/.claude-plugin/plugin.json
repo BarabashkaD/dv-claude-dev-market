@@ -1,0 +1,20 @@
+{
+  "name": "dv-freecad-harness-pitfalls",
+  "version": "1.0.0",
+  "description": "Companion reference for the cli-anything-freecad harness, recording the commands that return success while producing nothing. Covers sketch/pad, boolean rendering, DXF and SVG export, TechDraw, volume measurement, wires and spreadsheet aliases, each with the working alternative, plus the recipe-and-freecadcmd pipeline that does work.",
+  "author": {
+    "name": "BarabashkaD"
+  },
+  "keywords": [
+    "freecad",
+    "cad",
+    "laser-cutting",
+    "dxf",
+    "3d-modelling",
+    "boolean",
+    "export",
+    "reference",
+    "tooling",
+    "silent-failure"
+  ]
+}
