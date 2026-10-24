@@ -56,6 +56,21 @@
       ],
       "category": "engineering",
       "source": "./plugins/dv-freecad-print-workflow"
+    },
+    {
+      "name": "dv-cad-visual-decisions",
+      "description": "Present comparable, visual design alternatives for significant CAD nodes, record stable decisions, and carry approved choices into print-aware FreeCAD work.",
+      "version": "1.0.0",
+      "keywords": [
+        "cad",
+        "freecad",
+        "design-decisions",
+        "mechanical-design",
+        "visual-options",
+        "3d-printing"
+      ],
+      "category": "engineering",
+      "source": "./plugins/dv-cad-visual-decisions"
     }
   ]
 }

@@ -1,0 +1,17 @@
+{
+  "name": "dv-cad-visual-decisions",
+  "version": "1.0.0",
+  "description": "Present comparable, visual design alternatives for significant CAD nodes, record stable decisions, and carry approved choices into print-aware FreeCAD work.",
+  "author": {
+    "name": "BarabashkaD"
+  },
+  "repository": "https://github.com/BarabashkaD/dv-claude-dev-market",
+  "keywords": [
+    "cad",
+    "freecad",
+    "design-decisions",
+    "mechanical-design",
+    "visual-options",
+    "3d-printing"
+  ]
+}

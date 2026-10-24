@@ -26,8 +26,8 @@ repository's native marketplace at [`.agents/plugins/marketplace.json`](../../.a
 For the native route, run `codex plugin marketplace add BarabashkaD/dv-claude-dev-market`, restart the ChatGPT desktop app, select the
 marketplace in the Plugins Directory, install this plugin and start a new
 conversation to test it. Refresh the marketplace after repository updates so
-the host can update its cached local copy. The native catalog intentionally
-exposes this validated FreeCAD package only; the Claude marketplace remains a
+the host can update its cached local copy. The native catalog also exposes the
+separate `dv-cad-visual-decisions` package; the Claude marketplace remains a
 separate full catalog.
 
 This package does not install or configure FreeCAD MCP. Verify the existing
