@@ -1,0 +1,19 @@
+# Public provenance and licensing
+
+## Qwen adaptation
+
+The adapted `qwen-mm-plugins-freecad` skill derives from [Qwen-MM-Plugins](https://github.com/QwenLM/Qwen-MM-Plugins/blob/ce46a1eb4e4ff81ed9ff4518e16901d840509d54/src/capabilities/freecad/skill/SKILL.md), pinned upstream commit `ce46a1eb4e4ff81ed9ff4518e16901d840509d54`. Its original Apache-2.0 [LICENSE](skills/qwen-mm-plugins-freecad/LICENSE) is retained unchanged. The [modification notice](skills/qwen-mm-plugins-freecad/references/provenance.md) describes the adaptation.
+
+## External methodological reference
+
+[FreeCAD Production Suite](https://github.com/vindu939/freecad-skills), reference version 1.3.0, commit `a0df95b0445bdf9432aab12d4533ec3fa6baec09`, supplies complementary methods when available. Its code is not bundled or modified. This reference does not claim live compatibility or full upstream validation.
+
+## Original materials and images
+
+Original package documentation and illustrations have no declared license in this release. The Qwen Apache-2.0 license applies to that adapted skill, not automatically to the other materials. External source links are attribution, not a claim of rights over those sources.
+
+Ten AI-generated concept illustrations are retained with identical decoded pixels. Only their caBX/C2PA correlation metadata was stripped in public copies. These concepts are neither validated CAD nor evidence of mechanical or print performance.
+
+## Public sanitization summary
+
+Private source identifiers, private project names, personal conversation dates, installation history and source-archive correlation data are omitted. Historical preferences are represented as configurable defaults. Generic examples retain engineering intent without claiming private validation results. Original private source files were not modified.
