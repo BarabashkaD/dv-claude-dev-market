@@ -41,7 +41,7 @@ Queue expiry before a GUI operation starts cancels a pending operation, but exec
 
 - `execute_code_async(code)` returns a `job_id` for independent geometry/CPU work only. Do not change documents, recompute/save or access GUI state from the worker.
 - `get_async_status(job_id='')` reports running, done or failed jobs; an empty ID lists running and recent jobs. Use this bridge contract rather than assuming another async API.
-- `async commit(fn, timeout=120)` runs a callback on the GUI thread. Alternatively, store worker results and apply them later with `execute_code`. Use only the documented supported contract.
+- `commit(fn, timeout=120)`, called from an `execute_code_async` job, dispatches a callback to the GUI thread. Alternatively, store worker results and apply them later with `execute_code`. Use only the documented supported contract.
 - `execute_code_headless(code, timeout=600)` runs a separate FreeCADCmd process on the MCP server machine, independent of `--host`, with a fresh namespace. Use explicit imports and open/save paths. A positive finite timeout kills the headless process and may retain partial output. Unsaved GUI state does not carry over.
 
 Keep detailed numeric timeout defaults in this version-scoped contract, not as universal rules. Report performed, failed and unperformed checks separately.
