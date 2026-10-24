@@ -1,0 +1,20 @@
+{
+  "name": "dv-claude-dev-market",
+  "interface": {
+    "displayName": "BarabashkaD FreeCAD Plugins"
+  },
+  "plugins": [
+    {
+      "name": "dv-freecad-print-workflow",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dv-freecad-print-workflow"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Engineering"
+    }
+  ]
+}

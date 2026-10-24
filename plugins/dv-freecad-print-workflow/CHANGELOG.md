@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+- Add the portable root plugin manifest and a native repo marketplace for ChatGPT Desktop and Codex.
+- Keep the native catalog intentionally scoped to this validated FreeCAD package while retaining the full Claude-compatible catalog.
+- Document marketplace setup, restart/new-conversation testing, cached-copy refresh behavior and the separate standalone `.agents/skills` route.
+
 ## 1.1.0
 
 - Status: evolving and incomplete skill collection; static checks and manual review only, with no live FreeCAD/Bambu qualification.
