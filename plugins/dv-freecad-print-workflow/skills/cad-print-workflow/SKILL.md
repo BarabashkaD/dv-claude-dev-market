@@ -9,7 +9,7 @@ description: Coordinate FreeCAD design completion, human design decisions and su
 
 Complete the current FreeCAD design round as fully as possible before entering Bambu Studio. Always design with the intended printer/process in mind, but do not require repeated intermediate slicing. The installed production suite supplies engineering methods, not a conflicting stage schedule. This skill coordinates the package default sequence without modifying upstream skills.
 
-Use [qwen-mm-plugins-freecad](../qwen-mm-plugins-freecad/SKILL.md) for MCP-preferred CAD execution, [freecad-rib-engineering](../freecad-rib-engineering/SKILL.md) for applicable enclosure preferences, and [bambu-print-preparation](../bambu-print-preparation/SKILL.md) after CAD readiness. Missing optional suite methods are a capability gap to report, not permission to install software. Scale records to the task; a simple part need not acquire an elaborate project bureaucracy.
+Use [freecad-mcp-operations](../freecad-mcp-operations/SKILL.md) for MCP-preferred CAD execution, [freecad-rib-engineering](../freecad-rib-engineering/SKILL.md) for applicable enclosure preferences, and [bambu-print-preparation](../bambu-print-preparation/SKILL.md) after CAD readiness. Missing optional suite methods are a capability gap to report, not permission to install software. Scale records to the task; a simple part need not acquire an elaborate project bureaucracy.
 
 ## Verify current methods
 

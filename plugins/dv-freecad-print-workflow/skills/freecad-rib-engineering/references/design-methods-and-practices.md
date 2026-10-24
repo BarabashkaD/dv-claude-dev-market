@@ -85,7 +85,7 @@ Proposed comparison set: an unchanged panel, a thicker plain panel of comparable
 
 ## Environment and adoption status
 
-Use the installed vindu939 production suite for engineering methods, with the current local stage sequence and MCP-preferred execution policy. Scripts, macros and FreeCADCmd are bounded exceptions when no suitable supported route exists or they materially shorten the path, preferably using built-in high-level editable FreeCAD features. Current task and environment permissions govern execution; skill availability is not blanket authorization. Use Qwen for the existing MCP connection and keep upstream suite files unchanged.
+Use the installed vindu939 production suite for engineering methods, with the current local stage sequence and MCP-preferred execution policy. Scripts, macros and FreeCADCmd are bounded exceptions when no suitable supported route exists or they materially shorten the path, preferably using built-in high-level editable FreeCAD features. Current task and environment permissions govern execution; skill availability is not blanket authorization. Use the `freecad-mcp-operations` skill for the existing MCP connection and keep upstream suite files unchanged.
 
 The [rib selection and modeling guide](rib-selection-and-modeling-guide.md) provides type definitions, selection questions, modeling steps and connection checks. A representative CAD/print trial is still required.
 
