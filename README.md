@@ -34,7 +34,7 @@ Then install a plugin from it:
 
 | Plugin | What it does |
 |---|---|
-| [`dv-freecad-print-workflow`](plugins/dv-freecad-print-workflow) | Completes FreeCAD design before Bambu Studio preparation, with four documentation-only skills for stage decisions, MCP operation, enclosure engineering and print verification. |
+| [`dv-freecad-print-workflow`](plugins/dv-freecad-print-workflow) | Version 1.1.0: an evolving, incomplete collection that completes FreeCAD design before Bambu Studio preparation, with four documentation-only skills for stage decisions, MCP operation, enclosure engineering and print verification. Static checks only; not live FreeCAD/Bambu qualified. |
 
 For this plugin, `category` is marketplace-entry metadata only. Its plugin manifest contains supported identity/version/description/author/repository/keywords fields, with no category or plugin dependency field.
 

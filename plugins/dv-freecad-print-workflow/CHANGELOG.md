@@ -1,6 +1,8 @@
 # Changelog
 
-## 2.0.0
+## 1.1.0
+
+- Status: evolving and incomplete skill collection; static checks and manual review only, with no live FreeCAD/Bambu qualification.
 
 - Package four skills as a Claude plugin with marketplace registration.
 - Separate CAD design completion from subsequent Bambu Studio preparation; reopen a dedicated CAD round for significant design changes.
