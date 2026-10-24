@@ -1,0 +1,4 @@
+interface:
+  display_name: "FreeCAD Enclosure and Rib Engineering"
+  short_description: "Design enclosure covers, joints, vents, ribs and supports"
+  default_prompt: "Use $freecad-rib-engineering to choose enclosure interfaces, access covers, ventilation patterns and suitable ribs and supports."
