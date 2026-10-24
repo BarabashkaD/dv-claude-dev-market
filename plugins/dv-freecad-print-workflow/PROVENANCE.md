@@ -1,6 +1,6 @@
 # Public provenance and licensing
 
-Package status: 1.1.0 is an evolving, incomplete skill collection. Static checks and manual review do not establish live FreeCAD/Bambu qualification.
+Package status: 1.2.0 is an evolving, incomplete skill collection. Static checks and manual review do not establish live FreeCAD/Bambu qualification.
 
 ## Historical adaptation and licensing
 

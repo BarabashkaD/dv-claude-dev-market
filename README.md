@@ -16,6 +16,22 @@ Then install a plugin from it:
 /plugin install <plugin-name>@dv-claude-dev-market
 ```
 
+## ChatGPT Desktop and Codex
+
+This repository also includes a native repo marketplace at
+`.agents/plugins/marketplace.json`. It intentionally exposes only the validated
+`dv-freecad-print-workflow` package; the Claude-compatible marketplace above
+retains the full repository catalog.
+
+For the native route, add the repository marketplace with
+`codex plugin marketplace add BarabashkaD/dv-claude-dev-market`, restart the
+ChatGPT desktop app, select the marketplace in the Plugins Directory, install
+the plugin, and start a new conversation to test it. Refresh the marketplace
+after repository updates so the host can update its cached local copy. This
+repository does not install or configure FreeCAD MCP; verify the existing
+bridge at runtime. Do not install the same four skills through both the plugin
+route and a standalone `.agents/skills` route; hosts do not merge duplicates.
+
 ## Catalog
 
 ### Documentation
@@ -34,11 +50,16 @@ Then install a plugin from it:
 
 | Plugin | What it does |
 |---|---|
-| [`dv-freecad-print-workflow`](plugins/dv-freecad-print-workflow) | Version 1.1.0: an evolving, incomplete collection that completes FreeCAD design before Bambu Studio preparation, with four documentation-only skills for stage decisions, MCP operation, enclosure engineering and print verification. Static checks only; not live FreeCAD/Bambu qualified. |
+| [`dv-freecad-print-workflow`](plugins/dv-freecad-print-workflow) | Version 1.2.0: an evolving, incomplete collection that completes FreeCAD design before Bambu Studio preparation, with four documentation-only skills for stage decisions, MCP operation, enclosure engineering and print verification. Static checks only; not live FreeCAD/Bambu qualified. |
 
 For this plugin, `category` is marketplace-entry metadata only. Its plugin manifest contains supported identity/version/description/author/repository/keywords fields, with no category or plugin dependency field.
 
 ## Structure
+
+The native ChatGPT Desktop/Codex integration additionally uses
+`.agents/plugins/marketplace.json` and the portable `plugin.json` at the root
+of the FreeCAD plugin. The native catalog intentionally exposes only that
+validated package; the legacy Claude catalog remains the full repository list.
 
 Each plugin lives under `plugins/<plugin-name>/` and is registered in
 `.claude-plugin/marketplace.json`.

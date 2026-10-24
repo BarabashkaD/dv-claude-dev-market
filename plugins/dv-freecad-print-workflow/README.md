@@ -1,8 +1,8 @@
-# FreeCAD and print workflow · 1.1.0
+# FreeCAD and print workflow · 1.2.0
 
 Four documentation-only skills for editable FreeCAD design followed by Bambu Studio print preparation. This package adds no MCP server, installer, executable hook, CAD generator, slicer or printer-dispatch code.
 
-Status: 1.1.0 is an evolving, incomplete skill collection. It has static checks and manual review only; it is not live FreeCAD/Bambu qualified.
+Status: 1.2.0 is an evolving, incomplete skill collection. It has static checks and manual review only; it is not live FreeCAD/Bambu qualified.
 
 ## Skills
 
@@ -19,11 +19,27 @@ MCP is strongly preferred. Scripts, macros or FreeCADCmd are bounded exceptions 
 
 Before using a new method, verify the installed application's official version-relevant documentation and actual bridge capabilities separately. Reuse evidence for routine operations; recheck when versions, methods or assumptions change or an unexpected failure occurs. KiCad checks apply only to actual ECAD work.
 
-## Install and check
+## ChatGPT Desktop and Codex integration
+
+The package includes a portable root `plugin.json` and is exposed through the
+repository's native marketplace at [`.agents/plugins/marketplace.json`](../../.agents/plugins/marketplace.json).
+For the native route, run `codex plugin marketplace add BarabashkaD/dv-claude-dev-market`, restart the ChatGPT desktop app, select the
+marketplace in the Plugins Directory, install this plugin and start a new
+conversation to test it. Refresh the marketplace after repository updates so
+the host can update its cached local copy. The native catalog intentionally
+exposes this validated FreeCAD package only; the Claude marketplace remains a
+separate full catalog.
+
+This package does not install or configure FreeCAD MCP. Verify the existing
+bridge's actual schemas, health and version at runtime. A standalone
+`.agents/skills` route is separate from plugin installation; do not install the
+same four skills through both routes or assume duplicate names are merged.
+
+## Claude marketplace install
 
 From the marketplace, install `dv-freecad-print-workflow@dv-claude-dev-market`. Update the marketplace first if it is already configured. Installation provides instructions and assets, not application installation or proof of live compatibility. Back up custom skill changes outside discoverable skill directories; avoid duplicate copies of these four skill names. Verify discovery in a fresh session using the host's current supported workflow.
 
-For Codex Work, installing through the Claude marketplace does not establish Codex skill discovery. Confirm the active skill location supported by the current Codex environment, then copy or symlink all four whole skill folders from this package into that location as siblings, preserving their references and assets. Do not assume a fixed installation path or leave duplicate older versions in other discoverable locations. Back up existing customizations first and verify discovery of all four names in a fresh Codex session.
+For standalone authoring, use the host's supported `.agents/skills` location as a separate route from plugin installation. Do not assume a fixed installation path, leave duplicate older versions in other discoverable locations, or combine standalone copies with the plugin route; back up existing customizations first and verify discovery in a fresh session.
 
 FreeCAD and Bambu Studio must be available for their respective tasks. An existing suitable MCP bridge is preferred; discover actual schemas at runtime. The external FreeCAD Production Suite is a complementary source of methods, not bundled code or an automatically installed dependency. Report missing methods rather than silently installing software or pretending a namespaced skill is available.
 
