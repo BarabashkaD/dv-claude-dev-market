@@ -1,0 +1,18 @@
+{
+  "name": "dv-freecad-print-workflow",
+  "version": "2.0.0",
+  "description": "Sequential FreeCAD design and Bambu Studio print preparation with configurable enclosure engineering guidance and MCP-preferred execution.",
+  "author": {
+    "name": "BarabashkaD"
+  },
+  "repository": "https://github.com/BarabashkaD/dv-claude-dev-market",
+  "keywords": [
+    "freecad",
+    "bambu-studio",
+    "cad",
+    "fdm",
+    "3d-printing",
+    "enclosures",
+    "mcp"
+  ]
+}

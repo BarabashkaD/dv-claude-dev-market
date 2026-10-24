@@ -40,6 +40,22 @@
         "knowledge-base"
       ],
       "source": "./plugins/tech-doc-to-markdown"
+    },
+    {
+      "name": "dv-freecad-print-workflow",
+      "description": "Sequential FreeCAD design and Bambu Studio print preparation with configurable enclosure engineering guidance and MCP-preferred execution.",
+      "version": "2.0.0",
+      "keywords": [
+        "freecad",
+        "bambu-studio",
+        "cad",
+        "fdm",
+        "3d-printing",
+        "enclosures",
+        "mcp"
+      ],
+      "category": "engineering",
+      "source": "./plugins/dv-freecad-print-workflow"
     }
   ]
 }

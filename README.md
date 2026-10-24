@@ -30,6 +30,14 @@ Then install a plugin from it:
 |---|---|
 | [`python-venv-manager`](plugins/python-venv-manager) | One virtual environment per skill under a per-user Claude venvs directory, reused across sessions and projects instead of rebuilt each time. Includes a `PreToolUse` hook that blocks bare `python`/`pip` invocations. Linux, macOS, Windows. |
 
+### CAD and 3D printing
+
+| Plugin | What it does |
+|---|---|
+| [`dv-freecad-print-workflow`](plugins/dv-freecad-print-workflow) | Completes FreeCAD design before Bambu Studio preparation, with four documentation-only skills for stage decisions, MCP operation, enclosure engineering and print verification. |
+
+For this plugin, `category` is marketplace-entry metadata only. Its plugin manifest contains supported identity/version/description/author/repository/keywords fields, with no category or plugin dependency field.
+
 ## Structure
 
 Each plugin lives under `plugins/<plugin-name>/` and is registered in
