@@ -1,5 +1,7 @@
 # Validation scope
 
+Status: 1.1.0 is an evolving, incomplete skill collection. The checks below are static/manual only and do not qualify live FreeCAD or Bambu Studio execution.
+
 Completed static checks for this public candidate:
 
 - Plugin and marketplace manifests parse as JSON; the new plugin has no category, dependency, hook or MCP-server manifest fields.

@@ -1,5 +1,7 @@
 # Public provenance and licensing
 
+Package status: 1.1.0 is an evolving, incomplete skill collection. Static checks and manual review do not establish live FreeCAD/Bambu qualification.
+
 ## Qwen adaptation
 
 The adapted `qwen-mm-plugins-freecad` skill derives from [Qwen-MM-Plugins](https://github.com/QwenLM/Qwen-MM-Plugins/blob/ce46a1eb4e4ff81ed9ff4518e16901d840509d54/src/capabilities/freecad/skill/SKILL.md), pinned upstream commit `ce46a1eb4e4ff81ed9ff4518e16901d840509d54`. Its original Apache-2.0 [LICENSE](skills/qwen-mm-plugins-freecad/LICENSE) is retained unchanged. The [modification notice](skills/qwen-mm-plugins-freecad/references/provenance.md) describes the adaptation.

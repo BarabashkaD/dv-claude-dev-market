@@ -1,6 +1,8 @@
-# FreeCAD and print workflow · 2.0.0
+# FreeCAD and print workflow · 1.1.0
 
 Four documentation-only skills for editable FreeCAD design followed by Bambu Studio print preparation. This package adds no MCP server, installer, executable hook, CAD generator, slicer or printer-dispatch code.
+
+Status: 1.1.0 is an evolving, incomplete skill collection. It has static checks and manual review only; it is not live FreeCAD/Bambu qualified.
 
 ## Skills
 
