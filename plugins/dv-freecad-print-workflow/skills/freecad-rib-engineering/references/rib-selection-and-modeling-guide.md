@@ -96,7 +96,7 @@ Each driving value needs a source or an explicit concept assumption. Derive repe
 7. **Protect functional features.** Preserve bores, nut pockets, screw seats, locating faces and assembly paths. Inspect the final result after any later cuts; a cut can remove a root blend or split a rib.
 8. **Recompute and exercise parameters.** Check nominal dimensions plus relevant limits of panel size, rib width, height and spacing. Inspect the final Body tip, solid count, connections and minimum clearances after every consequential change.
 
-Use the installed production suite's modeling guidance with the current MCP-preferred execution policy in the sibling qwen-mm-plugins-freecad skill. Preserve editable native FCStd features and deterministic inputs when an exceptional script is justified. No additional CAD server is needed.
+Use the installed production suite's modeling guidance with the current MCP-preferred execution policy in the sibling `freecad-mcp-operations` skill. Preserve editable native FCStd features and deterministic inputs when an exceptional script is justified. No additional CAD server is needed.
 
 ## 6. Join ribs to surfaces and objects
 

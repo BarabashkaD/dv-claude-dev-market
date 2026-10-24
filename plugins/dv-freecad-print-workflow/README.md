@@ -7,7 +7,7 @@ Status: 1.1.0 is an evolving, incomplete skill collection. It has static checks 
 ## Skills
 
 - [cad-print-workflow](skills/cad-print-workflow/SKILL.md): decisions, coherent changes, CAD readiness, print preparation and return-to-design rules.
-- [qwen-mm-plugins-freecad](skills/qwen-mm-plugins-freecad/SKILL.md): discover the actual MCP bridge, operate safely and preserve native editable features.
+- [freecad-mcp-operations](skills/freecad-mcp-operations/SKILL.md): verify and operate the existing FreeCAD MCP bridge safely while preserving native editable features.
 - [freecad-rib-engineering](skills/freecad-rib-engineering/SKILL.md): configurable enclosure, rib, screw-support, interface, cover, ventilation and PCB mounting guidance.
 - [bambu-print-preparation](skills/bambu-print-preparation/SKILL.md): prepare accepted geometry, inspect actual layers/supports and classify findings.
 
@@ -39,4 +39,4 @@ The 10 bundled illustrations are AI-generated conceptual references, not validat
 
 See [VALIDATION.md](VALIDATION.md) for completed static checks and unperformed runtime tests, [CHANGELOG.md](CHANGELOG.md) for changes and [PROVENANCE.md](PROVENANCE.md) for public attribution and licensing boundaries. This package has not been qualified by live FreeCAD/MCP or Bambu Studio execution, printer operation or physical trials. CAD-ready, slice-reviewed and physically qualified are separate statuses.
 
-The adapted Qwen skill retains its Apache-2.0 license and modification notice. No license for the original package materials and illustrations is declared in this release; do not interpret the Qwen license as licensing the entire package.
+The operational skill retains the Apache-2.0 license and historical modification notice for its adapted source material. No license for the original package materials and illustrations is declared in this release; do not interpret that license as licensing the entire package.
