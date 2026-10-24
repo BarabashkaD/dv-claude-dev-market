@@ -19,9 +19,9 @@ Then install a plugin from it:
 ## ChatGPT Desktop and Codex
 
 This repository also includes a native repo marketplace at
-`.agents/plugins/marketplace.json`. It intentionally exposes only the validated
-`dv-freecad-print-workflow` package; the Claude-compatible marketplace above
-retains the full repository catalog.
+`.agents/plugins/marketplace.json`. It exposes the validated CAD packages
+`dv-freecad-print-workflow` and `dv-cad-visual-decisions`; the
+Claude-compatible marketplace above retains the full repository catalog.
 
 For the native route, add the repository marketplace with
 `codex plugin marketplace add BarabashkaD/dv-claude-dev-market`, restart the
@@ -51,15 +51,16 @@ route and a standalone `.agents/skills` route; hosts do not merge duplicates.
 | Plugin | What it does |
 |---|---|
 | [`dv-freecad-print-workflow`](plugins/dv-freecad-print-workflow) | Version 1.2.0: an evolving, incomplete collection that completes FreeCAD design before Bambu Studio preparation, with four documentation-only skills for stage decisions, MCP operation, enclosure engineering and print verification. Static checks only; not live FreeCAD/Bambu qualified. |
+| [`dv-cad-visual-decisions`](plugins/dv-cad-visual-decisions) | Version 1.0.0: batches genuine visual alternatives for significant CAD nodes, records stable owner decisions, and carries approved choices into print-aware design work. It does not replace CAD or physical validation. |
 
 For this plugin, `category` is marketplace-entry metadata only. Its plugin manifest contains supported identity/version/description/author/repository/keywords fields, with no category or plugin dependency field.
 
 ## Structure
 
 The native ChatGPT Desktop/Codex integration additionally uses
-`.agents/plugins/marketplace.json` and the portable `plugin.json` at the root
-of the FreeCAD plugin. The native catalog intentionally exposes only that
-validated package; the legacy Claude catalog remains the full repository list.
+`.agents/plugins/marketplace.json` and a portable `plugin.json` at the root of
+each native plugin. The native catalog intentionally exposes the reviewed CAD
+packages; the legacy Claude catalog remains the full repository list.
 
 Each plugin lives under `plugins/<plugin-name>/` and is registered in
 `.claude-plugin/marketplace.json`.

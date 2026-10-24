@@ -1,0 +1,4 @@
+interface:
+  display_name: "CAD Visual Decisions"
+  short_description: "Compare and record CAD design alternatives"
+  default_prompt: "Use $cad-visual-decisions to compare significant CAD design choices and record the selected option."

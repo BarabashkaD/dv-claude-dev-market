@@ -1,7 +1,7 @@
 {
   "name": "dv-claude-dev-market",
   "interface": {
-    "displayName": "BarabashkaD FreeCAD Plugins"
+    "displayName": "BarabashkaD CAD Plugins"
   },
   "plugins": [
     {
@@ -9,6 +9,18 @@
       "source": {
         "source": "local",
         "path": "./plugins/dv-freecad-print-workflow"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Engineering"
+    },
+    {
+      "name": "dv-cad-visual-decisions",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dv-cad-visual-decisions"
       },
       "policy": {
         "installation": "AVAILABLE",
