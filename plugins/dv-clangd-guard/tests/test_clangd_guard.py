@@ -128,12 +128,16 @@ class ClangdGuardTests(unittest.TestCase):
         compiler_found = any(shutil.which(candidate) for candidate in ("c++", "clang++", "g++", "cl"))
         if not compiler_found:
             self.skipTest("no C++ compiler is available for the real CMake fixture")
+        profile = json.loads(self.config.read_text(encoding="utf-8"))
+        profile["configure"]["timeoutSeconds"] = 180
+        self.config.write_text(json.dumps(profile, indent=2), encoding="utf-8")
+        self.approve_profile()
 
     def test_first_call_configures_real_fixture_and_second_call_is_noop(self) -> None:
         self.require_cmake_fixture()
         first = self.run_guard()
         self.assertEqual(first.returncode, 0, first.stderr)
-        self.assertEqual(first.stdout, "")
+        self.assertEqual(first.stdout, "", first.stdout)
         first_state = self.state()
         second = self.run_guard()
         self.assertEqual(second.returncode, 0, second.stderr)

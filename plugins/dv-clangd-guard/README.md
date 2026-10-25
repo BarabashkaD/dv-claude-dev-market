@@ -14,6 +14,16 @@ clangd provider. Install `clangd` separately and install the official
 
 ## Install
 
+The pull request for this plugin is currently a Draft. The marketplace commands
+below are for use after the PR is merged. To test this branch before merge,
+clone the branch and register that checkout as a local marketplace:
+
+```text
+git clone --branch feat-dv-clangd-guard https://github.com/BarabashkaD/dv-claude-dev-market.git
+/plugin marketplace add /path/to/dv-claude-dev-market
+/plugin install dv-clangd-guard@dv-claude-dev-market
+```
+
 Add this marketplace and install the plugin from a Claude Code session:
 
 ```text
@@ -83,7 +93,12 @@ configuration change):
 ```powershell
 $pythonExe = py -3 -c "import sys; print(sys.executable)"
 $pythonDir = Split-Path -Parent $pythonExe
-$env:Path += ";$pythonDir"
+$currentPython = Get-Command python.exe -ErrorAction SilentlyContinue
+if ($null -eq $currentPython -or $currentPython.Source -ne $pythonExe) {
+  $env:Path = "$pythonDir;$env:Path"
+}
+$resolvedPython = (Get-Command python.exe -ErrorAction Stop).Source
+if ($resolvedPython -ne $pythonExe) { throw "python.exe does not resolve to the py -3 interpreter: $resolvedPython" }
 python --version
 ```
 
@@ -183,6 +198,15 @@ sudo dnf install clang-tools-extra cmake ninja-build python3
 ```
 
 Fedora's `clang-tools-extra` package provides `clangd`.
+If `python --version` is not available after installing `python3`, use an
+isolated user-local venv for the hook without changing a system alias:
+
+```bash
+python3 -m venv "$HOME/.local/share/dv-clangd-guard/python"
+. "$HOME/.local/share/dv-clangd-guard/python/bin/activate"
+python --version
+claude
+```
 
 ### Arch Linux
 
