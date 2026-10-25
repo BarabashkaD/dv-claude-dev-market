@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+- Add local refinement rounds to the existing CAD workflow: minimal edits, mandatory local checks and one full relevant validation at explicit round closure.
+- Ask per remark whether a yellow-highlighted overview is wanted; when requested, wait for interpretation confirmation before editing.
+- Keep CAD-ready/release gates, MCP preference and design-before-print sequencing; clarify deferred parameter sweeps in the operational skill.
+
 ## 1.2.0
 
 - Add the portable root plugin manifest and a native repo marketplace for ChatGPT Desktop and Codex.
