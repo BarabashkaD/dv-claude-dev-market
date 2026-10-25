@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0
+
+- Add read-only `--diagnose` JSON reporting with separate profile, database,
+  identity, approval, state, freshness and bounded coverage results.
+- Distinguish command entries, unique files and duplicate commands; report exact
+  exclusions/reasons, missing sources and database files outside tracked scope.
+- Improve setup audit, Windows baseline preservation, nested fixture classification,
+  runtime/worker verification and before/after evidence guidance.
+- Preserve normal hook behavior, profile schemas and fail-closed checks.
+
 ## 0.2.0
 
 - Add v2 profiles separating guarded `workspaceRoot` from `cmakeSourceRoot`.

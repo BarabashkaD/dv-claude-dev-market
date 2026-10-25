@@ -425,6 +425,42 @@ The guard uses only Python's standard library; it has no pip dependencies.
 - [CMake compile commands](https://cmake.org/cmake/help/latest/variable/CMAKE_EXPORT_COMPILE_COMMANDS.html)
 - [CMake File API](https://cmake.org/cmake/help/latest/manual/cmake-file-api.7.html)
 
+## Read-only diagnostics (0.3.0)
+
+Inspect a selected profile without running CMake, approving a profile, creating
+File API queries/locks, or writing guard state:
+
+```text
+python <plugin-root>/hooks/clangd_guard.py --diagnose --project-dir <workspace>
+python <plugin-root>/hooks/clangd_guard.py --diagnose --config <profile-path> --project-dir <workspace> --detail-limit 50
+```
+
+`--diagnose` prints JSON (`reportVersion: 1`) and is mutually exclusive with
+`--approve`. Each detail list defaults to 20 items (range 1–100), with exact
+`total`/`omitted` counts. Exit **0 means inspection completed, not that LSP is
+allowed**: inspect each check's status. Exit 1 means the profile is missing or
+invalid; exit 2 means an inspection/CLI error. Missing state, invalid state,
+missing/malformed database and wrong CMake identity are separate checks.
+
+The report includes script version/path, profile/scope/configuration, approval
+status, freshness reason, database hash, total command entries, unique files,
+duplicate entries, missing/excluded/stale-excluded sources, files outside source
+roots, files located in the build directory and non-translation-unit entries.
+Coverage categories overlap; location in the build directory does not prove a
+file was generated. Excluded fixtures still need their own configuration/tests.
+When no usable database exists, coverage comparison is unavailable (not a pass).
+
+No command strings, compile arguments, environment values or approval-seal
+contents are emitted. Paths and user-written exclusion reasons can still reveal
+private project information: review before sharing. A caller may redirect output
+to an agreed file for a before/after snapshot; the diagnostic itself writes none.
+Concurrent changes can race these reads; this is not an atomic snapshot.
+
+A fresh diagnostic is **not** a hook allow decision, registration check, or proof
+that live clangd loaded this database. Queries still undergo scope/membership
+checks. Multiple commands for one source do not prove all variants were checked.
+Use actual guarded LSP calls and runtime command evidence for integration checks.
+
 ## Test locally
 
 From the repository root:
