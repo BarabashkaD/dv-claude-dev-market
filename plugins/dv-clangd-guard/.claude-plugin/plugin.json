@@ -1,0 +1,20 @@
+{
+  "name": "dv-clangd-guard",
+  "version": "0.1.0",
+  "description": "Fail-closed CMake compile-database freshness guard for Claude Code's official clangd LSP plugin.",
+  "author": {
+    "name": "BarabashkaD"
+  },
+  "keywords": [
+    "clangd",
+    "lsp",
+    "cmake",
+    "compile-commands",
+    "tooling",
+    "hooks",
+    "fail-closed"
+  ],
+  "dependencies": [
+    "clangd-lsp@claude-plugins-official"
+  ]
+}

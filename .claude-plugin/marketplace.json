@@ -4,6 +4,9 @@
   "owner": {
     "name": "BarabashkaD"
   },
+  "allowCrossMarketplaceDependenciesOn": [
+    "claude-plugins-official"
+  ],
   "plugins": [
     {
       "name": "python-venv-manager",
@@ -21,6 +24,21 @@
         "cross-platform"
       ],
       "source": "./plugins/python-venv-manager"
+    },
+    {
+      "name": "dv-clangd-guard",
+      "description": "Fail-closed CMake compile-database freshness guard for Claude Code's official clangd LSP plugin. Requires a separately installed clangd executable.",
+      "version": "0.1.0",
+      "category": "tooling",
+      "keywords": [
+        "clangd",
+        "lsp",
+        "cmake",
+        "compile-commands",
+        "hooks",
+        "fail-closed"
+      ],
+      "source": "./plugins/dv-clangd-guard"
     },
     {
       "name": "tech-doc-to-markdown",
