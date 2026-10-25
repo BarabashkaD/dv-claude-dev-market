@@ -76,11 +76,19 @@ clangd --version
 ```
 
 `py -3` is not a substitute for the `python` command used by this hook. If
-WinGet installed Python but only `py` works, repair the Python installation or
-configure the shell's PATH so that `python.exe` is a real executable; do not
-rely on an App Execution Alias or a PowerShell function. No pip packages are
-required. Keep the hook's executable-form `command`/`args`; it does not need
-Git Bash.
+WinGet installed Python but only `py` works, locate the real interpreter and
+add only its directory to the current launch session (no alias or global
+configuration change):
+
+```powershell
+$pythonExe = py -3 -c "import sys; print(sys.executable)"
+$pythonDir = Split-Path -Parent $pythonExe
+$env:Path += ";$pythonDir"
+python --version
+```
+
+No pip packages are required. Keep the hook's executable-form `command`/`args`;
+it does not need Git Bash.
 
 ### macOS
 
@@ -140,13 +148,23 @@ Install only missing packages from the distribution repositories:
 
 ```bash
 sudo apt update
-sudo apt install clangd cmake ninja-build python3
+sudo apt install clangd cmake ninja-build python3 python3-venv
 ```
 
-Some Debian/Ubuntu releases provide only `python3` from that package. The hook
-still requires a real `python` executable; do not replace it with a shell alias
-or function. Use a Python installation that exposes `python` in the Claude
-launch shell, then verify `python --version` before installing the plugin.
+Debian/Ubuntu commonly provide only `python3`, not an unversioned `python`.
+Create an isolated user-local environment so the hook gets a real `python`
+executable without changing a system alias:
+
+```bash
+python3 -m venv "$HOME/.local/share/dv-clangd-guard/python"
+. "$HOME/.local/share/dv-clangd-guard/python/bin/activate"
+python --version
+claude
+```
+
+Start Claude from that activated shell, or add only this venv's `bin` directory
+to the launcher's user/session PATH. Do not replace `/usr/bin/python` or add a
+shell alias.
 
 Ubuntu may place `clangd` in `universe`; enable that repository only if the
 package is unavailable and the user approves the repository change. WSL needs
@@ -211,23 +229,20 @@ cache-selection inputs in `configureInputs`; the CMake File API can discover
 many `cmakeFiles` inputs after a successful configure but cannot guarantee
 complete coverage of arbitrary project logic.
 
-Set `autoConfigure` to `false` if configure must be manual. After running the
-selected CMake command yourself, explicitly record the evidence (the command
-does not silently bless an old database):
-
-```text
-python <plugin-root>/hooks/clangd_guard.py --record --project-dir <project-root>
-```
-
-For automatic configure, approve the exact profile once after reviewing it:
+The v0.1 guard intentionally does not support blessing a manually configured
+database: `--record` is not available because a parseable old database is not
+proof that the latest configure ran. Use the exact configured argv with
+`autoConfigure: true`, then approve that profile once after reviewing it:
 
 ```text
 python <plugin-root>/hooks/clangd_guard.py --approve --project-dir <project-root>
 ```
 
-The approval seal is local and should normally be ignored by version control.
-Changing the profile invalidates the seal. A failed configure leaves the old
-state untrusted and blocked.
+The approval seal is stored in per-user application state outside the project,
+keyed by the canonical profile path and its SHA-256. It is not a repo file and
+does not need a `.gitignore` rule. Changing the profile invalidates the seal.
+To roll back automatic execution, set `autoConfigure` to `false` or remove the
+profile; the old state remains blocked and no command is run.
 
 ## Route clangd to the selected build
 
@@ -271,8 +286,22 @@ available for live testing in this repository environment.
 - Configure input tracking is conservative, not a complete CMake dependency
   graph. Keep important external toolchain/vendor `.cmake` files in
   `configureInputs` when File API discovery cannot cover them.
+- A queried `.c/.cc/.cpp/.cxx/.m/.mm` translation unit must be present in the
+  validated database. Headers are allowed to use clangd's inferred command
+  behavior, but the guard does not claim a header-only database proves source
+  coverage.
 
 The guard uses only Python's standard library; it has no pip dependencies.
+
+## Sources
+
+- [Claude Code hooks](https://code.claude.com/docs/en/hooks)
+- [Claude Code plugin dependencies](https://code.claude.com/docs/en/plugins/dependencies)
+- [Claude Code code intelligence](https://code.claude.com/docs/en/plugins/code-intelligence)
+- [clangd compilation database](https://clangd.llvm.org/design/compile-commands)
+- [clangd compilation database routing](https://clangd.llvm.org/config#compilationdatabase)
+- [CMake compile commands](https://cmake.org/cmake/help/latest/variable/CMAKE_EXPORT_COMPILE_COMMANDS.html)
+- [CMake File API](https://cmake.org/cmake/help/latest/manual/cmake-file-api.7.html)
 
 ## Test locally
 
@@ -283,6 +312,10 @@ py -3 plugins/dv-clangd-guard/tests/test_clangd_guard.py
 claude plugin validate plugins/dv-clangd-guard
 claude plugin validate .
 ```
+
+The setup skill can be invoked in Claude Code as
+`/dv-clangd-guard:dv-clangd-guard-setup`; it asks for the real build directory,
+preset, generator, toolchain, and configuration instead of guessing them.
 
 The tests use an isolated fixture and do not install packages or modify the
 user's Claude configuration. They exercise the hook payload, a real CMake

@@ -63,6 +63,7 @@ class ClangdGuardTests(unittest.TestCase):
             encoding="utf-8",
         )
         self.config = self.root / ".clangd-guard.json"
+        self.state_root = Path(self.temp.name) / "user-state"
         self.write_profile()
         self.approve_profile()
 
@@ -88,29 +89,24 @@ class ClangdGuardTests(unittest.TestCase):
         self.config.write_text(json.dumps(profile, indent=2), encoding="utf-8")
 
     def approve_profile(self) -> None:
-        import hashlib
-
-        trust = self.root / ".clangd-guard.trust.json"
-        trust.write_text(
-            json.dumps(
-                {
-                    "version": 1,
-                    "config_path": str(self.config.resolve()),
-                    "config_sha256": hashlib.sha256(self.config.read_bytes()).hexdigest(),
-                }
-            ),
-            encoding="utf-8",
+        result = subprocess.run(
+            [sys.executable, str(HOOK), "--approve", "--project-dir", str(self.root)],
+            text=True,
+            capture_output=True,
+            env={**os.environ, "CLANGD_GUARD_CONFIG": str(self.config), "CLANGD_GUARD_STATE_DIR": str(self.state_root)},
         )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
-    def run_guard(self, *, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    def run_guard(self, *, cwd: Path | None = None, target: Path | None = None) -> subprocess.CompletedProcess[str]:
         env = os.environ.copy()
         env["CLAUDE_PROJECT_DIR"] = str(self.root)
         env["CLANGD_GUARD_CONFIG"] = str(self.config)
+        env["CLANGD_GUARD_STATE_DIR"] = str(self.state_root)
         payload = {
             "cwd": str(cwd or self.root),
             "project_directory": str(self.root),
             "tool_name": "LSP",
-            "tool_input": {"file_path": str(self.root / "src" / "main.cpp")},
+            "tool_input": {"file_path": str(target or self.root / "src" / "main.cpp")},
         }
         return subprocess.run(
             [sys.executable, str(HOOK)],
@@ -132,12 +128,6 @@ class ClangdGuardTests(unittest.TestCase):
         compiler_found = any(shutil.which(candidate) for candidate in ("c++", "clang++", "g++", "cl"))
         if not compiler_found:
             self.skipTest("no C++ compiler is available for the real CMake fixture")
-
-    def require_cmake_tools(self) -> None:
-        if subprocess.run(["cmake", "--version"], capture_output=True).returncode != 0:
-            self.skipTest("cmake is not installed")
-        if subprocess.run(["ninja", "--version"], capture_output=True).returncode != 0:
-            self.skipTest("ninja is not installed")
 
     def test_first_call_configures_real_fixture_and_second_call_is_noop(self) -> None:
         self.require_cmake_fixture()
@@ -173,6 +163,39 @@ class ClangdGuardTests(unittest.TestCase):
         self.assertEqual(self.run_guard().returncode, 0)
         self.assertGreater(self.state()["configured_at"], original["configured_at"])
 
+    def test_first_configure_rechecks_new_file_api_input(self) -> None:
+        script = self.root / "discover_input.py"
+        marker = self.root / "configure-count.txt"
+        script.write_text(
+            textwrap.dedent(
+                f"""
+                import json, pathlib
+                root = pathlib.Path.cwd()
+                marker = pathlib.Path({str(marker)!r})
+                marker.write_text(str(int(marker.read_text() or '0') + 1) if marker.exists() else '1', encoding='utf-8')
+                build = root / 'build' / 'debug'
+                build.mkdir(parents=True, exist_ok=True)
+                (build / 'compile_commands.json').write_text(json.dumps([{{'directory': str(build), 'file': str(root / 'src' / 'main.cpp'), 'command': 'c++ -c main.cpp'}}]), encoding='utf-8')
+                (build / 'CMakeCache.txt').write_text('CMAKE_HOME_DIRECTORY:INTERNAL=' + str(root) + '\\n', encoding='utf-8')
+                reply = build / '.cmake' / 'api' / 'v1' / 'reply'
+                reply.mkdir(parents=True, exist_ok=True)
+                (reply / 'cmakeFiles-v1-test.json').write_text(json.dumps({{'kind': 'cmakeFiles', 'paths': {{'source': str(root), 'build': str(build)}}, 'inputs': [{{'path': 'CMakeLists.txt'}}, {{'path': 'cmake/Options.cmake', 'isExternal': True}}]}}), encoding='utf-8')
+                (reply / 'index-test.json').write_text(json.dumps({{'objects': [{{'kind': 'cmakeFiles', 'jsonFile': 'cmakeFiles-v1-test.json'}}]}}), encoding='utf-8')
+                """
+            ),
+            encoding="utf-8",
+        )
+        self.write_profile(
+            configure={"command": [sys.executable, str(script)], "cwd": ".", "timeoutSeconds": 30},
+            configureInputs=["CMakeLists.txt", "CMakePresets.json", "discover_input.py"],
+        )
+        self.approve_profile()
+        result = self.run_guard()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(marker.read_text(encoding="utf-8"), "2")
+        self.assertIn(str((self.root / "cmake" / "Options.cmake").resolve()), self.state()["configure_inputs"])
+
     def test_malformed_and_replaced_database_are_blocked_without_auto_configure(self) -> None:
         self.require_cmake_fixture()
         self.assertEqual(self.run_guard().returncode, 0)
@@ -206,27 +229,32 @@ class ClangdGuardTests(unittest.TestCase):
         self.assertEqual(original, self.state())
 
     def test_successful_command_cannot_bless_a_different_build_identity(self) -> None:
-        self.require_cmake_tools()
-        self.write_profile(autoConfigure=False)
-        database = self.root / "build" / "debug" / "compile_commands.json"
-        database.parent.mkdir(parents=True, exist_ok=True)
-        database.write_text(
-            json.dumps(
-                [{"directory": str(database.parent), "file": str(self.root / "src" / "main.cpp"), "command": "c++ -c main.cpp"}]
+        seed = self.root / "seed.py"
+        seed.write_text(
+            textwrap.dedent(
+                f"""
+                import json, pathlib
+                root = pathlib.Path.cwd()
+                build = root / 'build' / 'debug'
+                build.mkdir(parents=True, exist_ok=True)
+                (build / 'compile_commands.json').write_text(json.dumps([{{'directory': str(build), 'file': str(root / 'src' / 'main.cpp'), 'command': 'c++ -c main.cpp'}}]), encoding='utf-8')
+                (build / 'CMakeCache.txt').write_text('CMAKE_HOME_DIRECTORY:INTERNAL=' + str(root) + '\\n', encoding='utf-8')
+                reply = build / '.cmake' / 'api' / 'v1' / 'reply'
+                reply.mkdir(parents=True, exist_ok=True)
+                (reply / 'cmakeFiles-v1-test.json').write_text(json.dumps({{'kind': 'cmakeFiles', 'paths': {{'source': str(root), 'build': str(build)}}, 'inputs': [{{'path': 'CMakeLists.txt'}}]}}))
+                (reply / 'index-test.json').write_text(json.dumps({{'objects': [{{'kind': 'cmakeFiles', 'jsonFile': 'cmakeFiles-v1-test.json'}}]}}))
+                """
             ),
             encoding="utf-8",
         )
-        (self.root / "build" / "debug" / "CMakeCache.txt").write_text(
-            f"CMAKE_HOME_DIRECTORY:INTERNAL={self.root}\n", encoding="utf-8"
+        self.write_profile(
+            configure={"command": [sys.executable, str(seed)], "cwd": ".", "timeoutSeconds": 30},
+            configureInputs=["CMakeLists.txt", "CMakePresets.json", "seed.py"],
         )
-        self.write_file_api_reply()
-        recorded = subprocess.run(
-            [sys.executable, str(HOOK), "--record", "--project-dir", str(self.root)],
-            text=True,
-            capture_output=True,
-            env={**os.environ, "CLANGD_GUARD_CONFIG": str(self.config)},
-        )
-        self.assertEqual(recorded.returncode, 0, recorded.stderr)
+        self.approve_profile()
+        first = self.run_guard()
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertEqual(first.stdout, "", first.stdout)
         original = self.state()
         wrong_root = self.root / "another-project"
         wrong_root.mkdir()
@@ -245,6 +273,47 @@ class ClangdGuardTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn('"permissionDecision": "deny"', result.stdout)
         self.assertEqual(original, self.state())
+
+    def test_repo_supplied_trust_file_is_ignored(self) -> None:
+        for trust in self.state_root.rglob("*.json"):
+            trust.unlink()
+        (self.root / ".clangd-guard.trust.json").write_text("{}\n", encoding="utf-8")
+        result = self.run_guard()
+        self.assertEqual(result.returncode, 0)
+        self.assertIn('"permissionDecision": "deny"', result.stdout)
+        self.assertFalse((self.root / "build" / "debug" / ".clangd-guard" / "state.json").exists())
+
+    def test_queried_translation_unit_outside_source_roots_is_denied(self) -> None:
+        seed = self.root / "seed.py"
+        seed.write_text(
+            textwrap.dedent(
+                """
+                import json, pathlib
+                root = pathlib.Path.cwd()
+                build = root / 'build' / 'debug'
+                build.mkdir(parents=True, exist_ok=True)
+                (build / 'compile_commands.json').write_text(json.dumps([{'directory': str(build), 'file': str(root / 'src' / 'main.cpp'), 'command': 'c++ -c main.cpp'}]), encoding='utf-8')
+                (build / 'CMakeCache.txt').write_text('CMAKE_HOME_DIRECTORY:INTERNAL=' + str(root) + '\\n', encoding='utf-8')
+                reply = build / '.cmake' / 'api' / 'v1' / 'reply'
+                reply.mkdir(parents=True, exist_ok=True)
+                (reply / 'cmakeFiles-v1-test.json').write_text(json.dumps({'kind': 'cmakeFiles', 'paths': {'source': str(root), 'build': str(build)}, 'inputs': [{'path': 'CMakeLists.txt'}]}))
+                (reply / 'index-test.json').write_text(json.dumps({'objects': [{'kind': 'cmakeFiles', 'jsonFile': 'cmakeFiles-v1-test.json'}]}))
+                """
+            ),
+            encoding="utf-8",
+        )
+        self.write_profile(
+            configure={"command": [sys.executable, str(seed)], "cwd": ".", "timeoutSeconds": 30},
+            configureInputs=["CMakeLists.txt", "CMakePresets.json", "seed.py"],
+        )
+        self.approve_profile()
+        self.assertEqual(self.run_guard().returncode, 0)
+        extra = self.root / "generated" / "extra.cpp"
+        extra.parent.mkdir()
+        extra.write_text("int extra() { return 0; }\n", encoding="utf-8")
+        blocked = self.run_guard(target=extra)
+        self.assertEqual(blocked.returncode, 0)
+        self.assertIn('"permissionDecision": "deny"', blocked.stdout)
 
     def test_timeout_and_crash_fail_closed(self) -> None:
         self.require_cmake_fixture()
@@ -355,36 +424,6 @@ class ClangdGuardTests(unittest.TestCase):
         )
         self.assertEqual(skipped_outside.returncode, 0)
         self.assertEqual(skipped_outside.stdout, "")
-
-    def test_manual_configure_can_record_evidence_without_auto_configure(self) -> None:
-        self.require_cmake_tools()
-        self.write_profile(autoConfigure=False)
-        self.assertEqual(self.run_guard().returncode, 0)
-        database = self.root / "build" / "debug" / "compile_commands.json"
-        database.parent.mkdir(parents=True, exist_ok=True)
-        database.write_text(
-            json.dumps(
-                [
-                    {
-                        "directory": str(database.parent),
-                        "file": str(self.root / "src" / "main.cpp"),
-                        "command": "c++ -c main.cpp",
-                    }
-                ]
-            ),
-            encoding="utf-8",
-        )
-        cache = self.root / "build" / "debug" / "CMakeCache.txt"
-        cache.write_text(f"CMAKE_HOME_DIRECTORY:INTERNAL={self.root}\n", encoding="utf-8")
-        self.write_file_api_reply()
-        recorded = subprocess.run(
-            [sys.executable, str(HOOK), "--record", "--project-dir", str(self.root)],
-            text=True,
-            capture_output=True,
-            env={**os.environ, "CLANGD_GUARD_CONFIG": str(self.config)},
-        )
-        self.assertEqual(recorded.returncode, 0, recorded.stderr)
-        self.assertEqual(self.run_guard().returncode, 0)
 
     def write_file_api_reply(self) -> None:
         reply = self.root / "build" / "debug" / ".cmake" / "api" / "v1" / "reply"

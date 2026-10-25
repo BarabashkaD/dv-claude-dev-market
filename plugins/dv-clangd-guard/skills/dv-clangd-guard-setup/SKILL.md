@@ -54,21 +54,19 @@ the project; it is intentionally explicit:
 
 `autoConfigure: true` is an explicit consent to run only the listed argv
 command in the listed working directory. After reviewing the profile, create
-its local approval seal with:
+its per-user approval seal with:
 
 ```text
 python <plugin-root>/hooks/clangd_guard.py --approve --project-dir <project-root>
 ```
 
-Changing the profile invalidates that seal. Set it to `false` when configure
-must be run manually; after the manual command succeeds, record its evidence
-explicitly:
-
-```text
-python <plugin-root>/hooks/clangd_guard.py --record --project-dir <project-root>
-```
-
-The hook still validates freshness and blocks stale LSP calls.
+Changing the profile invalidates that seal. The seal is keyed by the canonical
+profile path and stored outside the repository in per-user application state;
+it is not a repo file to add to `.gitignore`. The v0.1 guard intentionally does
+not provide a manual `--record` operation: a parseable old database is not
+proof that the latest configure ran. Keep `autoConfigure: false` to block all
+LSP calls until the explicit configure argv is approved. To roll back, set it
+to `false` or remove the profile.
 
 `sourceRoots` is required. It lets the guard detect source membership
 additions, removals, and renames in bounded directories. It does not hash
@@ -96,6 +94,8 @@ the listed roots and arbitrary generated/build-time membership are unsupported.
 4. Ask Claude to use the LSP on a matching C/C++ file. The first call may run
    the configured configure command. A stale, missing, malformed, or replaced
    database remains blocked until a successful validation.
+
+Invoke this skill in Claude Code as `/dv-clangd-guard:dv-clangd-guard-setup`.
 
 The guard checks database freshness, tracked CMake/File API inputs, configured
 environment names, and bounded source membership. It does not prove that

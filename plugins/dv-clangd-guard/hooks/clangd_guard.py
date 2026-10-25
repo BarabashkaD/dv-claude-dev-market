@@ -182,7 +182,7 @@ def _validate_profile(profile: dict[str, Any], config_path: Path, project_dir: P
         "build_dir": build_dir,
         "database": build_dir / "compile_commands.json",
         "cache": build_dir / "CMakeCache.txt",
-        "trust_path": config_path.parent / ".clangd-guard.trust.json",
+        "trust_path": _trust_path(config_path),
         "state_dir": state_dir,
         "state_path": state_dir / "state.json",
         "lock_path": state_dir / "configure.lock",
@@ -195,6 +195,21 @@ def _validate_profile(profile: dict[str, Any], config_path: Path, project_dir: P
         "source_roots": [_path(value, root) for value in source_roots],
         "source_extensions": set(extensions),
     }
+
+
+def _trust_path(config_path: Path) -> Path:
+    """Return a per-user approval path, never a path controlled by the repo."""
+    configured_state = os.environ.get("CLANGD_GUARD_STATE_DIR")
+    if configured_state:
+        state_root = _path(configured_state, Path.cwd())
+    elif os.name == "nt":
+        state_root = _path(os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local"), Path.cwd())
+    elif sys.platform == "darwin":
+        state_root = Path.home() / "Library" / "Application Support"
+    else:
+        state_root = _path(os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state"), Path.cwd())
+    key = hashlib.sha256(str(config_path.resolve(strict=False)).encode("utf-8")).hexdigest()
+    return state_root / "dv-clangd-guard" / "trust" / f"{key}.json"
 
 
 def _iter_files(path: Path, ignored_dir: Path) -> Iterable[Path]:
@@ -460,6 +475,24 @@ def _freshness(profile: dict[str, Any], state: dict[str, Any] | None) -> tuple[b
     return True, "fresh"
 
 
+def _target_membership_reason(targets: Iterable[Path], state: dict[str, Any] | None) -> str | None:
+    """Require queried translation units to be represented in the fresh DB."""
+    if state is None:
+        return "no validated compile database exists for the queried translation unit"
+    members = set(state.get("database_members", []))
+    missing = [
+        _display(target)
+        for target in targets
+        if target.suffix.lower() in TRANSLATION_UNIT_EXTENSIONS and _display(target) not in members
+    ]
+    if missing:
+        return (
+            "queried translation unit is not represented in compile_commands.json: "
+            + ", ".join(missing[:3])
+        )
+    return None
+
+
 def _profile_sha256(profile: dict[str, Any]) -> str:
     return _digest_file(profile["config_path"])
 
@@ -526,117 +559,99 @@ def _run_configure(profile: dict[str, Any], old_state: dict[str, Any] | None) ->
         fresh, _ = _freshness(profile, latest_state)
         if fresh:
             return latest_state or {}
-        input_paths_before = _current_inputs(profile, latest_state or old_state)
-        input_fingerprints_before = _input_fingerprints(input_paths_before, profile["build_dir"])
-        source_members_before = _source_members(profile, [])
-        database_before = _digest_file(profile["database"])
-        cache_before = _digest_file(profile["cache"])
-        file_api_before = _file_api_index_digest(profile["build_dir"])
-        configure_started_ns = time.time_ns()
-        try:
-            completed = subprocess.run(
-                profile["configure_command"],
-                cwd=str(profile["configure_cwd"]),
-                env=os.environ.copy(),
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                timeout=profile["configure_timeout"],
-                shell=False,
-                check=False,
-            )
-        except subprocess.TimeoutExpired as exc:
-            raise GuardError(
-                f"configure timed out after {profile['configure_timeout']:g}s; old compile database remains blocked"
-            ) from exc
-        except OSError as exc:
-            raise GuardError(f"could not start configure command: {exc}") from exc
-        if completed.returncode != 0:
-            details = (completed.stderr or completed.stdout or "").strip()
-            if len(details) > 1200:
-                details = details[-1200:]
-            suffix = f": {details}" if details else ""
-            raise GuardError(f"configure failed with exit code {completed.returncode}{suffix}")
+        input_paths = _current_inputs(profile, latest_state or old_state)
+        deadline = time.monotonic() + profile["configure_timeout"]
+        for attempt in range(2):
+            input_fingerprints_before = _input_fingerprints(input_paths, profile["build_dir"])
+            source_members_before = _source_members(profile, [])
+            database_before = _digest_file(profile["database"])
+            cache_before = _digest_file(profile["cache"])
+            file_api_before = _file_api_index_digest(profile["build_dir"])
+            configure_started_ns = time.time_ns()
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise GuardError("configure budget was exhausted while discovering CMake inputs")
+            try:
+                completed = subprocess.run(
+                    profile["configure_command"],
+                    cwd=str(profile["configure_cwd"]),
+                    env=os.environ.copy(),
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=min(profile["configure_timeout"], remaining),
+                    shell=False,
+                    check=False,
+                )
+            except subprocess.TimeoutExpired as exc:
+                raise GuardError(
+                    f"configure timed out after {profile['configure_timeout']:g}s; old compile database remains blocked"
+                ) from exc
+            except OSError as exc:
+                raise GuardError(f"could not start configure command: {exc}") from exc
+            if completed.returncode != 0:
+                details = (completed.stderr or completed.stdout or "").strip()
+                if len(details) > 1200:
+                    details = details[-1200:]
+                suffix = f": {details}" if details else ""
+                raise GuardError(f"configure failed with exit code {completed.returncode}{suffix}")
 
-        input_fingerprints_after = _input_fingerprints(input_paths_before, profile["build_dir"])
-        if input_fingerprints_after != input_fingerprints_before:
-            raise GuardError("tracked configure inputs changed during configure; run the LSP again after changes settle")
-        database_digest, database_members = _database_members(profile["database"])
-        if database_digest == "<missing>":
-            raise GuardError("configure succeeded but did not produce compile_commands.json")
-        source_members_after = _source_members(profile, database_members)
-        if source_members_after != source_members_before:
-            raise GuardError("source membership changed during configure; run the LSP again after changes settle")
-        coverage_reason = _source_coverage(profile, database_members)
-        if coverage_reason:
-            raise GuardError(coverage_reason)
-        cache_digest, file_api_digest = _configuration_identity(profile)
-        if (
-            database_digest == database_before
-            and cache_digest == cache_before
-            and file_api_digest == file_api_before
-            and _latest_file_api_index(profile["build_dir"]).stat().st_mtime_ns < configure_started_ns
-        ):
-            raise GuardError(
-                "configure did not produce fresh evidence for the selected build; "
-                "an old database cannot be blessed"
-            )
-        discovered = _latest_file_api_inputs(profile["build_dir"])
-        discovered_set = {path.resolve(strict=False) for path in discovered}
-        if old_state and any(path not in set(input_paths_before) for path in discovered_set):
-            raise GuardError(
-                "configure discovered a new File API input; add it to configureInputs and approve the profile before retrying"
-            )
-        all_inputs = list(dict.fromkeys([*input_paths_before, *discovered]))
-        state = {
-            "version": STATE_VERSION,
-            "project_root": _display(profile["project_root"]),
-            "build_dir": _display(profile["build_dir"]),
-            "configure_inputs": [_display(path) for path in all_inputs],
-            "input_fingerprints": _input_fingerprints(all_inputs, profile["build_dir"]),
-            "environment_fingerprints": _environment_fingerprints(profile["environment_variables"]),
-            "database_sha256": database_digest,
-            "database_members": database_members,
-            "cache_sha256": cache_digest,
-            "file_api_index_sha256": file_api_digest,
-            "source_members": _source_members(profile, database_members),
-            "configured_at": time.time(),
-        }
-        _write_state(profile["state_path"], state)
-        return state
-
-
-def _record_manual_state(profile: dict[str, Any]) -> dict[str, Any]:
-    """Record evidence after a user ran the configured build command manually."""
-    if not profile["build_dir"].is_dir():
-        raise GuardError(f"selected build directory is missing: {_display(profile['build_dir'])}")
-    _ensure_file_api_query(profile["build_dir"])
-    with _ConfigureLock(profile["lock_path"]):
-        database_digest, database_members = _database_members(profile["database"])
-        coverage_reason = _source_coverage(profile, database_members)
-        if coverage_reason:
-            raise GuardError(coverage_reason)
-        cache_digest, file_api_digest = _configuration_identity(profile)
-        discovered = _latest_file_api_inputs(profile["build_dir"])
-        old_state = _load_state(profile["state_path"])
-        all_inputs = list(dict.fromkeys([*_current_inputs(profile, old_state), *discovered]))
-        state = {
-            "version": STATE_VERSION,
-            "project_root": _display(profile["project_root"]),
-            "build_dir": _display(profile["build_dir"]),
-            "configure_inputs": [_display(path) for path in all_inputs],
-            "input_fingerprints": _input_fingerprints(all_inputs, profile["build_dir"]),
-            "environment_fingerprints": _environment_fingerprints(profile["environment_variables"]),
-            "database_sha256": database_digest,
-            "database_members": database_members,
-            "cache_sha256": cache_digest,
-            "file_api_index_sha256": file_api_digest,
-            "source_members": _source_members(profile, database_members),
-            "configured_at": time.time(),
-        }
-        _write_state(profile["state_path"], state)
-        return state
+            input_fingerprints_after = _input_fingerprints(input_paths, profile["build_dir"])
+            if input_fingerprints_after != input_fingerprints_before:
+                raise GuardError("tracked configure inputs changed during configure; run the LSP again after changes settle")
+            database_digest, database_members = _database_members(profile["database"])
+            if database_digest == "<missing>":
+                raise GuardError("configure succeeded but did not produce compile_commands.json")
+            source_members_after = _source_members(profile, database_members)
+            if source_members_after != source_members_before:
+                raise GuardError("source membership changed during configure; run the LSP again after changes settle")
+            coverage_reason = _source_coverage(profile, database_members)
+            if coverage_reason:
+                raise GuardError(coverage_reason)
+            cache_digest, file_api_digest = _configuration_identity(profile)
+            latest_index = _latest_file_api_index(profile["build_dir"])
+            if (
+                latest_index is None
+                or (
+                    database_digest == database_before
+                    and cache_digest == cache_before
+                    and file_api_digest == file_api_before
+                    and latest_index.stat().st_mtime_ns < configure_started_ns
+                )
+            ):
+                raise GuardError(
+                    "configure did not produce fresh evidence for the selected build; "
+                    "an old database cannot be blessed"
+                )
+            discovered = _latest_file_api_inputs(profile["build_dir"])
+            discovered_set = {path.resolve(strict=False) for path in discovered}
+            new_discovered = [path for path in discovered_set if path not in set(input_paths)]
+            if new_discovered:
+                if old_state or attempt:
+                    raise GuardError(
+                        "configure discovered a new File API input; add it to configureInputs and approve the profile before retrying"
+                    )
+                input_paths = list(dict.fromkeys([*input_paths, *sorted(new_discovered)]))
+                continue
+            all_inputs = list(dict.fromkeys([*input_paths, *discovered]))
+            state = {
+                "version": STATE_VERSION,
+                "project_root": _display(profile["project_root"]),
+                "build_dir": _display(profile["build_dir"]),
+                "configure_inputs": [_display(path) for path in all_inputs],
+                "input_fingerprints": _input_fingerprints(all_inputs, profile["build_dir"]),
+                "environment_fingerprints": _environment_fingerprints(profile["environment_variables"]),
+                "database_sha256": database_digest,
+                "database_members": database_members,
+                "cache_sha256": cache_digest,
+                "file_api_index_sha256": file_api_digest,
+                "source_members": _source_members(profile, database_members),
+                "configured_at": time.time(),
+            }
+            _write_state(profile["state_path"], state)
+            return state
+        raise GuardError("configure did not produce a stable CMake input set")
 
 
 def _write_state(path: Path, state: dict[str, Any]) -> None:
@@ -710,6 +725,9 @@ def main(stdin: str | None = None) -> int:
         state = _load_state(profile["state_path"])
         fresh, reason = _freshness(profile, state)
         if fresh:
+            target_reason = _target_membership_reason(targets, state)
+            if target_reason:
+                raise GuardError(target_reason)
             return 0
         if not profile["auto_configure"]:
             return _deny(f"LSP blocked: {reason}. Configure the selected build explicitly, then retry.")
@@ -718,6 +736,9 @@ def main(stdin: str | None = None) -> int:
         fresh_after, reason_after = _freshness(profile, _load_state(profile["state_path"]))
         if not fresh_after:
             raise GuardError(f"configure completed but freshness validation failed: {reason_after}")
+        target_reason = _target_membership_reason(targets, _load_state(profile["state_path"]))
+        if target_reason:
+            raise GuardError(target_reason)
         return 0
     except GuardError as exc:
         # Expected policy failures are structured denies. A process crash or a
@@ -730,26 +751,20 @@ def main(stdin: str | None = None) -> int:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="dv-clangd-guard hook and explicit setup recovery helper")
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--approve", action="store_true", help="approve the current profile for automatic configure")
-    mode.add_argument("--record", action="store_true", help="record a manually configured build as fresh evidence")
+    parser = argparse.ArgumentParser(description="dv-clangd-guard hook and explicit profile approval helper")
+    parser.add_argument("--approve", action="store_true", help="approve the current profile for automatic configure")
     parser.add_argument("--project-dir", default=os.getcwd(), help="project directory containing the profile")
     parser.add_argument("--config", help="explicit .clangd-guard.json path")
     args = parser.parse_args()
-    if args.approve or args.record:
+    if args.approve:
         if args.config:
             os.environ["CLANGD_GUARD_CONFIG"] = args.config
         try:
             payload = {"cwd": args.project_dir, "project_directory": args.project_dir}
             profile_raw, config_path, project_dir = _find_profile(payload)
             profile = _validate_profile(profile_raw, config_path, project_dir)
-            if args.approve:
-                _approve_profile(profile)
-                print(f"Approved profile: {_display(profile['config_path'])}")
-            else:
-                _record_manual_state(profile)
-                print(f"Recorded fresh build evidence: {_display(profile['build_dir'])}")
+            _approve_profile(profile)
+            print(f"Approved profile: {_display(profile['config_path'])}")
             raise SystemExit(0)
         except Exception as exc:
             print(f"dv-clangd-guard setup failed: {exc}", file=sys.stderr)
