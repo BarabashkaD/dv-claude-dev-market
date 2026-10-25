@@ -26,6 +26,14 @@ allowlist enables that dependency, but it does not install the `clangd`
 executable. Claude Code's current code-intelligence documentation says the
 official LSP plugin and the language-server binary are separate installs.
 
+Use Claude Code 2.1.295 or newer: this plugin relies on hook
+`onFailure: "block"` for fail-closed handling of a missing interpreter, crash,
+or host timeout. The checker requires Python 3.9 or newer and uses only the
+standard library. The hook uses the real executable named `python`; verify
+that exact command in the shell that launches Claude. `py -3` and `python3`
+are useful version checks but are not substitutes for the executable invoked
+by the hook.
+
 ## Install missing executables
 
 First check what is already available and install only what is missing. These
@@ -34,7 +42,8 @@ commands do not alter the selected compiler or CMake toolchain.
 ### Windows PowerShell
 
 ```powershell
-Get-Command clangd,cmake,ninja,py -ErrorAction SilentlyContinue
+Get-Command python,clangd,cmake,ninja,py -ErrorAction SilentlyContinue
+python --version
 clangd --version
 cmake --version
 ninja --version
@@ -66,16 +75,18 @@ $env:Path += ";$env:ProgramFiles\LLVM\bin"
 clangd --version
 ```
 
-`py -3` is not a substitute for the `python` command used by this hook. The
-hook needs a working `python` executable on PATH; verify `python --version` as
-well if `py -3` is the only launcher available. No pip packages are required.
-On Windows without Git Bash, use a Claude Code version that supports
-`onFailure: "block"` and keep the hook's executable-form `command`/`args`.
+`py -3` is not a substitute for the `python` command used by this hook. If
+WinGet installed Python but only `py` works, repair the Python installation or
+configure the shell's PATH so that `python.exe` is a real executable; do not
+rely on an App Execution Alias or a PowerShell function. No pip packages are
+required. Keep the hook's executable-form `command`/`args`; it does not need
+Git Bash.
 
 ### macOS
 
 ```bash
-command -v clangd cmake ninja python3 || true
+command -v python clangd cmake ninja python3 || true
+python --version
 clangd --version
 cmake --version
 ninja --version
@@ -89,6 +100,15 @@ brew install llvm
 brew install cmake
 brew install ninja
 brew install python
+```
+
+Homebrew may place the unversioned `python` executable in the Python
+formula's `libexec/bin`. If `python --version` is not found, expose that real
+directory in the shell that starts Claude without creating an alias:
+
+```bash
+export PATH="$PATH:$(brew --prefix python)/libexec/bin"
+python --version
 ```
 
 Homebrew's `llvm` is keg-only. Preserve the existing compiler selection and
@@ -108,7 +128,8 @@ find clangd, because that can replace the project's compiler selection.
 ### Debian or Ubuntu
 
 ```bash
-command -v clangd cmake ninja python3 || true
+command -v python clangd cmake ninja python3 || true
+python --version
 clangd --version
 cmake --version
 ninja --version
@@ -122,6 +143,11 @@ sudo apt update
 sudo apt install clangd cmake ninja-build python3
 ```
 
+Some Debian/Ubuntu releases provide only `python3` from that package. The hook
+still requires a real `python` executable; do not replace it with a shell alias
+or function. Use a Python installation that exposes `python` in the Claude
+launch shell, then verify `python --version` before installing the plugin.
+
 Ubuntu may place `clangd` in `universe`; enable that repository only if the
 package is unavailable and the user approves the repository change. WSL needs
 the Linux packages inside the WSL distribution, not only on Windows.
@@ -129,7 +155,8 @@ the Linux packages inside the WSL distribution, not only on Windows.
 ### Fedora
 
 ```bash
-command -v clangd cmake ninja python3 || true
+command -v python clangd cmake ninja python3 || true
+python --version
 clangd --version
 cmake --version
 ninja --version
@@ -184,9 +211,40 @@ cache-selection inputs in `configureInputs`; the CMake File API can discover
 many `cmakeFiles` inputs after a successful configure but cannot guarantee
 complete coverage of arbitrary project logic.
 
-Set `autoConfigure` to `false` if configure must be manual. The guard still
-blocks missing, malformed, replaced, or stale databases until the manual
-configure has succeeded and the next LSP preflight records fresh state.
+Set `autoConfigure` to `false` if configure must be manual. After running the
+selected CMake command yourself, explicitly record the evidence (the command
+does not silently bless an old database):
+
+```text
+python <plugin-root>/hooks/clangd_guard.py --record --project-dir <project-root>
+```
+
+For automatic configure, approve the exact profile once after reviewing it:
+
+```text
+python <plugin-root>/hooks/clangd_guard.py --approve --project-dir <project-root>
+```
+
+The approval seal is local and should normally be ignored by version control.
+Changing the profile invalidates the seal. A failed configure leaves the old
+state untrusted and blocked.
+
+## Route clangd to the selected build
+
+clangd does not reliably discover an arbitrary out-of-tree database merely
+because `compile_commands.json` exists. In the project-root `.clangd`, merge
+the following setting with the existing YAML instead of replacing that file:
+
+```yaml
+CompileFlags:
+  CompilationDatabase: build/debug
+```
+
+Use the exact configured `buildDir` (relative to the project root). Preserve
+all existing `.clangd` keys and get explicit user approval before editing it.
+The guard validates the database and CMake identity; it does not prove that a
+live clangd provider has loaded the database. Runtime provider routing was not
+available for live testing in this repository environment.
 
 ## What the guard means
 
@@ -197,12 +255,22 @@ configure has succeeded and the next LSP preflight records fresh state.
 - Failed, crashed, or timed-out configure never blesses an old database.
 - Concurrent sessions serialize configure per build directory and recheck
   freshness after taking the lock.
+- The hook host timeout is 1830 seconds: 1800 seconds maximum configure time,
+  plus the bounded 10-second lock wait and small process overhead. A host kill
+  is fail-closed through `onFailure: "block"`; it never turns an old database
+  into fresh state.
 - Fresh database, generated-header availability, and clangd index readiness
   are separate states. This hook only proves the first one.
 - Changes made by unrelated build processes can race this private lock; rerun
   the LSP after those processes settle.
 - Only explicit Claude `LSP` calls are guarded. Automatic diagnostics and
   other clients are outside the hook's scope.
+- `sourceRoots` is required and intentionally bounded. New, removed, or
+  renamed translation units inside those roots are fail-closed; files outside
+  the roots and arbitrary generated/build-time membership are unsupported.
+- Configure input tracking is conservative, not a complete CMake dependency
+  graph. Keep important external toolchain/vendor `.cmake` files in
+  `configureInputs` when File API discovery cannot cover them.
 
 The guard uses only Python's standard library; it has no pip dependencies.
 
@@ -218,6 +286,8 @@ claude plugin validate .
 
 The tests use an isolated fixture and do not install packages or modify the
 user's Claude configuration. They exercise the hook payload, a real CMake
-fixture when CMake and Ninja are available, malformed/replaced databases,
-failed configure, timeout/crash, lock contention, source membership, and paths
-containing spaces and Unicode.
+fixture when CMake, Ninja, and a C++ compiler are available, malformed/replaced
+databases, failed configure, timeout/crash, lock contention, source
+membership, and paths containing spaces and Unicode. If the compiler is not
+available, the real compiler-database integration tests are skipped; the
+remaining policy tests still run.
