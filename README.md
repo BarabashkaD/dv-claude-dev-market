@@ -45,6 +45,7 @@ route and a standalone `.agents/skills` route; hosts do not merge duplicates.
 | Plugin | What it does |
 |---|---|
 | [`python-venv-manager`](plugins/python-venv-manager) | One virtual environment per skill under a per-user Claude venvs directory, reused across sessions and projects instead of rebuilt each time. Includes a `PreToolUse` hook that blocks bare `python`/`pip` invocations. Linux, macOS, Windows. |
+| [`dv-clangd-guard`](plugins/dv-clangd-guard) | Fail-closed CMake compile-database freshness guard for Claude Code's official `clangd-lsp` provider. Requires a separately installed `clangd` executable and an explicit project profile. |
 
 ### CAD and 3D printing
 
