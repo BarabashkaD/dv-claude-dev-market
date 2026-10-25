@@ -1,8 +1,14 @@
 # Validation scope
 
-Status: 1.2.0 is an evolving, incomplete skill collection. The checks below are static/manual only and do not qualify live FreeCAD or Bambu Studio execution.
+Status: 1.3.0 is an evolving, incomplete skill collection. The checks below are static/manual only and do not qualify live FreeCAD or Bambu Studio execution.
 
-Completed static checks for this public candidate:
+## 1.3.0 documentation update
+
+JSON parsing, matching manifest/catalog versions, unchanged catalog coverage, local Markdown paths and manual workflow walkthroughs were checked. Walkthroughs covered repeated local remarks, round closure and a second round, an early final-export request, a blocking global issue, and per-remark report opt-out/confirmation/correction waits. No FreeCAD/Bambu execution was performed. Claude CLI validation was not rerun because the CLI was unavailable in the cloud editing environment.
+
+## Prior packaging validation (1.2.0)
+
+Completed static checks for the earlier public candidate:
 
 - Portable and legacy plugin manifests parse as JSON; their name/version match, the native marketplace path resolves from the repository root, and the native package has no MCP server, hook or installer configuration.
 - Four SKILL.md frontmatter blocks parse as YAML, with matching directory/name and description fields.

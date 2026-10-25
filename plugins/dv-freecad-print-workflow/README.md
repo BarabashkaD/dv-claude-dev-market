@@ -1,12 +1,12 @@
-# FreeCAD and print workflow · 1.2.0
+# FreeCAD and print workflow · 1.3.0
 
 Four documentation-only skills for editable FreeCAD design followed by Bambu Studio print preparation. This package adds no MCP server, installer, executable hook, CAD generator, slicer or printer-dispatch code.
 
-Status: 1.2.0 is an evolving, incomplete skill collection. It has static checks and manual review only; it is not live FreeCAD/Bambu qualified.
+Status: 1.3.0 is an evolving, incomplete skill collection. It has static checks and manual review only; it is not live FreeCAD/Bambu qualified.
 
 ## Skills
 
-- [cad-print-workflow](skills/cad-print-workflow/SKILL.md): decisions, coherent changes, CAD readiness, print preparation and return-to-design rules.
+- [cad-print-workflow](skills/cad-print-workflow/SKILL.md): decisions, local refinement rounds, coherent changes, CAD readiness, print preparation and return-to-design rules.
 - [freecad-mcp-operations](skills/freecad-mcp-operations/SKILL.md): verify and operate the existing FreeCAD MCP bridge safely while preserving native editable features.
 - [freecad-rib-engineering](skills/freecad-rib-engineering/SKILL.md): configurable enclosure, rib, screw-support, interface, cover, ventilation and PCB mounting guidance.
 - [bambu-print-preparation](skills/bambu-print-preparation/SKILL.md): prepare accepted geometry, inspect actual layers/supports and classify findings.
@@ -14,6 +14,8 @@ Status: 1.2.0 is an evolving, incomplete skill collection. It has static checks 
 ## Workflow
 
 Finish and verify the FreeCAD design round first. Consider printing throughout design, but do not require repeated intermediate slicing. Then prepare the accepted revision in Bambu Studio. Correct local print-related geometry in the source model; significant concept, fit, layout or load-path changes reopen a dedicated FreeCAD round before slicing resumes.
+
+For an accepted model under localized review, collect minimal edits in a local refinement round: recompute and check affected geometry after each change, then run full relevant validation once the user closes the round. Readiness and release gates still apply.
 
 MCP is strongly preferred. Scripts, macros or FreeCADCmd are bounded exceptions when no suitable supported route exists or they materially shorten the path. Prefer built-in high-level editable features over opaque generated geometry. The skill does not grant execution, installation, publishing or printing authority.
 
