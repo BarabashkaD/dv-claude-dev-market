@@ -123,9 +123,22 @@ def _find_profile(payload: dict[str, Any]) -> tuple[dict[str, Any], Path, Path]:
 
 
 def _validate_profile(profile: dict[str, Any], config_path: Path, project_dir: Path) -> dict[str, Any]:
-    if profile.get("version") != 1:
-        raise GuardError("clangd-guard profile must set version to 1")
-    root = _path(str(profile.get("projectRoot", ".")), config_path.parent)
+    version = profile.get("version")
+    if version not in (1, 2):
+        raise GuardError("clangd-guard profile must set version to 1 or 2")
+    if version == 2:
+        if "projectRoot" in profile:
+            raise GuardError("v2 uses workspaceRoot and cmakeSourceRoot, not projectRoot")
+        for key in ("workspaceRoot", "cmakeSourceRoot", "configuration"):
+            if not isinstance(profile.get(key), str) or not profile[key].strip():
+                raise GuardError(f"v2 requires an explicit {key}")
+    elif any(key in profile for key in ("workspaceRoot", "cmakeSourceRoot", "configuration", "excludedSources")):
+        raise GuardError("workspace/configuration fields require profile version 2")
+    root = _path(str(profile.get("workspaceRoot" if version == 2 else "projectRoot", ".")), config_path.parent)
+    cmake_root = _path(profile["cmakeSourceRoot"], root) if version == 2 else root
+    configuration = profile.get("configuration") if version == 2 else None
+    if not cmake_root.is_dir() or not cmake_root.is_relative_to(root):
+        raise GuardError("cmakeSourceRoot must be an existing directory within workspaceRoot")
     if not root.is_dir():
         raise GuardError(f"configured projectRoot is not a directory: {_display(root)}")
     configured_build = profile.get("buildDir")
@@ -173,9 +186,42 @@ def _validate_profile(profile: dict[str, Any], config_path: Path, project_dir: P
     if not isinstance(extensions, list) or any(not isinstance(value, str) or not value.startswith(".") for value in extensions):
         raise GuardError("sourceExtensions must be a list of dot-prefixed extensions")
 
+    if version == 2 and not TRANSLATION_UNIT_EXTENSIONS.issubset(extensions):
+        raise GuardError("v2 sourceExtensions must include every supported translation-unit extension; use reviewed excludedSources instead")
+
+    resolved_source_roots = [_path(value, root) for value in source_roots]
+    exclusions: dict[str, str] = {}
+    if version == 2:
+        if any(not path.is_dir() or not path.is_relative_to(root) for path in resolved_source_roots):
+            raise GuardError("v2 sourceRoots must be existing directories within workspaceRoot")
+        if any(path == build_dir or path.is_relative_to(build_dir) for path in resolved_source_roots):
+            raise GuardError("sourceRoots must not be inside the selected build directory")
+        excluded_sources = profile.get("excludedSources", [])
+        if not isinstance(excluded_sources, list):
+            raise GuardError("excludedSources must be a list of exact paths and reasons")
+        for item in excluded_sources:
+            if not isinstance(item, dict) or set(item) != {"path", "reason"}:
+                raise GuardError("each excludedSources entry must contain only path and reason")
+            value, reason = item["path"], item["reason"]
+            if not isinstance(value, str) or not value or any(char in value for char in "*?[]"):
+                raise GuardError("excludedSources paths must be exact paths, not globs")
+            if not isinstance(reason, str) or not reason.strip():
+                raise GuardError("each excluded source needs a non-empty configuration-specific reason")
+            path = _path(value, root)
+            if path.suffix.lower() not in TRANSLATION_UNIT_EXTENSIONS or not any(path.is_relative_to(src) for src in resolved_source_roots):
+                raise GuardError("excludedSources must name translation units within sourceRoots")
+            key = _display(path)
+            if key in exclusions:
+                raise GuardError(f"duplicate excluded source: {key}")
+            exclusions[key] = reason.strip()
+
     state_dir = build_dir / ".clangd-guard"
     return {
         "profile": profile,
+        "profile_version": version,
+        "cmake_source_root": cmake_root,
+        "configuration": configuration,
+        "excluded_sources": exclusions,
         "config_path": config_path.resolve(strict=False),
         "project_dir": project_dir,
         "project_root": root,
@@ -192,7 +238,7 @@ def _validate_profile(profile: dict[str, Any], config_path: Path, project_dir: P
         "configure_timeout": float(timeout),
         "configure_inputs": [_path(value, root) for value in inputs],
         "environment_variables": environment,
-        "source_roots": [_path(value, root) for value in source_roots],
+        "source_roots": resolved_source_roots,
         "source_extensions": set(extensions),
     }
 
@@ -317,10 +363,16 @@ def _source_coverage(profile: dict[str, Any], database_members: list[str]) -> st
     if not profile["source_roots"]:
         return "sourceRoots must be configured to verify translation-unit membership"
     database_set = set(database_members)
+    exclusions = profile["excluded_sources"]
+    for member in exclusions:
+        if not Path(member).is_file():
+            return f"excluded source no longer exists; review the profile: {member}"
+        if member in database_set:
+            return f"excluded source is compiled in {profile['configuration']}; review the exclusion: {member}"
     missing = [
         member
         for member in _source_members(profile, database_members)
-        if Path(member).suffix.lower() in TRANSLATION_UNIT_EXTENSIONS and member not in database_set
+        if Path(member).suffix.lower() in TRANSLATION_UNIT_EXTENSIONS and member not in database_set and member not in exclusions
     ]
     if missing:
         preview = ", ".join(missing[:3])
@@ -357,11 +409,22 @@ def _cache_home_directory(cache: Path) -> Path | None:
 
 def _configuration_identity(profile: dict[str, Any]) -> tuple[str, str]:
     cache_home = _cache_home_directory(profile["cache"])
-    if cache_home != profile["project_root"]:
+    if cache_home != profile["cmake_source_root"]:
         raise GuardError(
-            "selected build is not configured for the selected projectRoot; "
+            "selected build is not configured for the selected CMake source root; "
             "run the configured CMake command or choose the matching build directory"
         )
+    if profile["profile_version"] == 2:
+        cache = profile["cache"].read_text(encoding="utf-8", errors="replace")
+        values = {}
+        for line in cache.splitlines():
+            if not line.startswith(("#", "//")) and ":" in line and "=" in line:
+                key, value = line.split("=", 1)
+                values[key.split(":", 1)[0]] = value
+        if values.get("CMAKE_CONFIGURATION_TYPES"):
+            raise GuardError("v2 requires a single-configuration build/database; use a separate Ninja build per configuration")
+        if values.get("CMAKE_BUILD_TYPE") != profile["configuration"]:
+            raise GuardError("selected build CMAKE_BUILD_TYPE does not match the approved configuration")
     file_api_digest = _file_api_index_digest(profile["build_dir"])
     if file_api_digest == "<missing>":
         raise GuardError("selected build has no current CMake File API reply; configure it with the guard query present")
@@ -439,6 +502,11 @@ def _current_inputs(profile: dict[str, Any], state: dict[str, Any] | None) -> li
 def _freshness(profile: dict[str, Any], state: dict[str, Any] | None) -> tuple[bool, str]:
     if state is None:
         return False, "no successful configure state exists"
+    if profile["profile_version"] == 2 and (
+        state.get("cmake_source_root") != _display(profile["cmake_source_root"])
+        or state.get("configuration") != profile["configuration"]
+    ):
+        return False, "CMake source root or selected configuration changed"
     if state.get("project_root") != _display(profile["project_root"]):
         return False, "project root changed"
     if state.get("build_dir") != _display(profile["build_dir"]):
@@ -475,6 +543,23 @@ def _freshness(profile: dict[str, Any], state: dict[str, Any] | None) -> tuple[b
     return True, "fresh"
 
 
+def _target_scope_reason(profile: dict[str, Any], targets: Iterable[Path]) -> str | None:
+    if profile["profile_version"] != 2:
+        return None
+    for target in targets:
+        if not target.is_relative_to(profile["project_root"]):
+            return f"NOT VALIDATED: queried file is outside workspaceRoot: {_display(target)}"
+        if not any(target.is_relative_to(root) for root in profile["source_roots"]):
+            return f"NOT VALIDATED: queried file is outside approved sourceRoots: {_display(target)}"
+        reason = profile["excluded_sources"].get(_display(target))
+        if reason:
+            return (
+                f"NOT VALIDATED in {profile['configuration']}: {_display(target)} ({reason}). "
+                "Use a matching configuration/database; this exclusion never permits an LSP query."
+            )
+    return None
+
+
 def _target_membership_reason(targets: Iterable[Path], state: dict[str, Any] | None) -> str | None:
     """Require queried translation units to be represented in the fresh DB."""
     if state is None:
@@ -487,7 +572,7 @@ def _target_membership_reason(targets: Iterable[Path], state: dict[str, Any] | N
     ]
     if missing:
         return (
-            "queried translation unit is not represented in compile_commands.json: "
+            "NOT VALIDATED: queried translation unit is not represented in the selected compile_commands.json: "
             + ", ".join(missing[:3])
         )
     return None
@@ -638,6 +723,9 @@ def _run_configure(profile: dict[str, Any], old_state: dict[str, Any] | None) ->
             state = {
                 "version": STATE_VERSION,
                 "project_root": _display(profile["project_root"]),
+                "cmake_source_root": _display(profile["cmake_source_root"]),
+                "configuration": profile["configuration"],
+                "excluded_sources": profile["excluded_sources"],
                 "build_dir": _display(profile["build_dir"]),
                 "configure_inputs": [_display(path) for path in all_inputs],
                 "input_fingerprints": _input_fingerprints(all_inputs, profile["build_dir"]),
@@ -720,7 +808,10 @@ def main(stdin: str | None = None) -> int:
         profile = _validate_profile(profile_raw, config_path, project_dir)
         target_base = _path(str(payload.get("cwd") or os.getcwd()), Path.cwd())
         targets = list(_payload_target_paths(payload.get("tool_input", {}), target_base))
-        if not any(target.is_relative_to(profile["project_root"]) for target in targets):
+        scope_reason = _target_scope_reason(profile, targets)
+        if scope_reason:
+            raise GuardError(scope_reason)
+        if profile["profile_version"] == 1 and not any(target.is_relative_to(profile["project_root"]) for target in targets):
             return 0
         state = _load_state(profile["state_path"])
         fresh, reason = _freshness(profile, state)
@@ -730,7 +821,7 @@ def main(stdin: str | None = None) -> int:
                 raise GuardError(target_reason)
             return 0
         if not profile["auto_configure"]:
-            return _deny(f"LSP blocked: {reason}. Configure the selected build explicitly, then retry.")
+            return _deny(f"LSP blocked: {reason}. Review and approve an autoConfigure profile so the guard can establish fresh state; manual configure or --approve alone cannot record freshness.")
         _require_trust(profile)
         _run_configure(profile, state)
         fresh_after, reason_after = _freshness(profile, _load_state(profile["state_path"]))

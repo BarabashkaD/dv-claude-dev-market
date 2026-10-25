@@ -14,16 +14,6 @@ clangd provider. Install `clangd` separately and install the official
 
 ## Install
 
-The pull request for this plugin is currently a Draft. The marketplace commands
-below are for use after the PR is merged. To test this branch before merge,
-clone the branch and register that checkout as a local marketplace:
-
-```text
-git clone --branch feat-dv-clangd-guard https://github.com/BarabashkaD/dv-claude-dev-market.git
-/plugin marketplace add /path/to/dv-claude-dev-market
-/plugin install dv-clangd-guard@dv-claude-dev-market
-```
-
 Add this marketplace and install the plugin from a Claude Code session:
 
 ```text
@@ -230,8 +220,10 @@ generator, toolchain, and configuration. The smallest useful profile is:
 
 ```json
 {
-  "version": 1,
-  "projectRoot": ".",
+  "version": 2,
+  "workspaceRoot": ".",
+  "cmakeSourceRoot": ".",
+  "configuration": "Debug",
   "buildDir": "build/debug",
   "autoConfigure": true,
   "configure": {
@@ -241,7 +233,8 @@ generator, toolchain, and configuration. The smallest useful profile is:
   },
   "configureInputs": ["CMakeLists.txt", "CMakePresets.json"],
   "environmentVariables": ["CC", "CXX", "CMAKE_TOOLCHAIN_FILE"],
-  "sourceRoots": ["src", "include"]
+  "sourceRoots": ["src", "include"],
+  "excludedSources": []
 }
 ```
 
@@ -253,13 +246,13 @@ cache-selection inputs in `configureInputs`; the CMake File API can discover
 many `cmakeFiles` inputs after a successful configure but cannot guarantee
 complete coverage of arbitrary project logic.
 
-The v0.1 guard intentionally does not support blessing a manually configured
+The guard intentionally does not support blessing a manually configured
 database: `--record` is not available because a parseable old database is not
 proof that the latest configure ran. Use the exact configured argv with
 `autoConfigure: true`, then approve that profile once after reviewing it:
 
 ```text
-python <plugin-root>/hooks/clangd_guard.py --approve --project-dir <project-root>
+python <plugin-root>/hooks/clangd_guard.py --approve --project-dir <workspace-root>
 ```
 
 The approval seal is stored in per-user application state outside the project,
@@ -267,6 +260,109 @@ keyed by the canonical profile path and its SHA-256. It is not a repo file and
 does not need a `.gitignore` rule. Changing the profile invalidates the seal.
 To roll back automatic execution, set `autoConfigure` to `false` or remove the
 profile; the old state remains blocked and no command is run.
+
+## V2: workspace scope and configuration coverage
+
+`workspaceRoot` resolves relative to the profile file. `cmakeSourceRoot`,
+`buildDir`, `configure.cwd`, `configureInputs`, `sourceRoots`, and exclusion
+paths resolve relative to `workspaceRoot`. `cmakeSourceRoot` must match
+`CMAKE_HOME_DIRECTORY` exactly. The workspace and CMake source root need not
+be identical: a superbuild may compile sibling repositories.
+
+V2 deliberately supports **one single-configuration database** per profile.
+`configuration` must exactly match `CMAKE_BUILD_TYPE` (for example `Debug`,
+not a preset label such as `vs2026 Debug`);
+a nonempty `CMAKE_CONFIGURATION_TYPES` is rejected. Use separate Ninja build
+directories/profiles for Debug, Release, ASan, platform/toolchain variants.
+A Debug label is not proof of matching all flags: inspect the approved preset,
+toolchain, cache options and compile commands against the intended build.
+The guard fingerprints the cache and database, but does not infer semantic
+compiler equivalence or prove other configurations correct.
+
+For a workspace with `superbuild/` and sibling `library/`, a profile can use:
+
+```json
+{
+  "version": 2,
+  "workspaceRoot": ".",
+  "cmakeSourceRoot": "superbuild",
+  "configuration": "Debug",
+  "buildDir": "_build/clangd-debug",
+  "autoConfigure": true,
+  "configure": {
+    "command": ["cmake", "--preset", "clangd-debug"],
+    "cwd": "superbuild",
+    "timeoutSeconds": 300
+  },
+  "configureInputs": ["superbuild/CMakeLists.txt", "superbuild/CMakePresets.json", "superbuild/CMakeUserPresets.json", "library/CMakeLists.txt"],
+  "environmentVariables": ["CC", "CXX", "CMAKE_TOOLCHAIN_FILE"],
+  "sourceRoots": ["library/src", "library/include", "superbuild/tests"],
+  "excludedSources": [
+    {"path": "library/src/posix.cpp", "reason": "POSIX implementation; not compiled by this Windows Debug preset. Validate with the Linux profile."}
+  ]
+}
+```
+
+Create only paths that actually exist and ensure the preset's binary directory
+is exactly the selected `buildDir`. Do not copy exclusions from this example.
+Derive each one from the actual CMake conditions/targets and review it with the
+user. Exclusions are exact translation-unit paths with a nonempty reason,
+not globs or directory exclusions. They are bound to this configuration through
+the approved profile. Missing exclusions or exclusions now present in the database
+block validation until reviewed. They remain in filesystem membership tracking
+and are recorded with reasons in the state report. A direct query to an excluded
+file is **NOT VALIDATED**, with the reason and instruction to use a matching
+configuration. Exclusions never grant an LSP pass for that file.
+
+V2 `sourceExtensions`, if customized, must retain all supported translation-unit
+extensions; it cannot be used to hide sources instead of reviewing exclusions.
+
+The on-disk scan is intentionally retained, rather than replaced by only the
+CMake File API's active target list: a newly added source outside that list
+must not silently disappear from coverage. New unlisted sources trigger
+configure and remain blocked until added to CMake or explicitly reviewed as
+excluded. Ordinary source-body edits still do not force configure.
+
+Keep the profile in the workspace used to launch Claude (or select it explicitly
+with `CLANGD_GUARD_CONFIG`). Do not shrink the workspace to the superbuild merely
+to satisfy identity validation. Every C/C++ target in a v2 request, including
+mixed-target requests and headers, must be inside `workspaceRoot` and an approved
+`sourceRoots` directory. External dependency/header queries therefore need a
+separately appropriate profile; there is no silent outside-scope bypass.
+Headers inside scope use clangd's inferred compile command, not proof of all
+conditional header branches.
+
+### Windows wrappers and tracked inputs
+
+A reviewed PowerShell wrapper may prepare the MSVC developer environment and
+then execute CMake. Use the same wrapper for manual diagnostics and the approved
+automatic configure argv, with process-local environment changes only. Verify
+that `pwsh` (PowerShell 7) exists if the command names it; Windows PowerShell is a
+different executable. Preserve errors/exit codes and the existing compiler.
+Include the wrapper and **every external cache/toolchain/config file it reads**
+in `configureInputs`, including another build's `CMakeCache.txt` if used to
+select MSVC. Track environment names affecting wrapper behavior; an empty list
+is appropriate only when no inherited environment value influences configure.
+The approval seal approves profile bytes, not immutable contents of every
+script/CMake dependency: only trust automatic configure in trusted checkouts.
+
+### Migrating version 1
+
+Existing v1 profiles retain their legacy single-root behavior and do not gain
+multi-repository/configuration-aware coverage automatically. In v2, replace
+`projectRoot` with explicit `workspaceRoot` and `cmakeSourceRoot`; rebase paths
+against the workspace, select `configuration`, review exclusions, and approve
+the changed profile again. V2 rejects `projectRoot` rather than guessing.
+The guard must then run configure and validate the new state. `--approve` only
+records consent; neither it nor a standalone manual configure proves freshness.
+Do not switch off auto-configure and expect a manual configure to unblock an
+uninitialized/stale state. Review and re-enable the approved automatic command.
+
+One configuration is a navigation baseline only. Before edits affecting
+`#if/#ifdef`, identify supported configurations affected and validate each with
+its matching build/database and tests. Never merge incompatible database entries
+and claim all variants were checked. Report unavailable checks as NOT VALIDATED;
+do not impose a full configuration matrix on unrelated routine edits.
 
 ## Route clangd to the selected build
 
@@ -305,8 +401,10 @@ available for live testing in this repository environment.
 - Only explicit Claude `LSP` calls are guarded. Automatic diagnostics and
   other clients are outside the hook's scope.
 - `sourceRoots` is required and intentionally bounded. New, removed, or
-  renamed translation units inside those roots are fail-closed; files outside
-  the roots and arbitrary generated/build-time membership are unsupported.
+  renamed files inside those roots invalidate freshness. Unlisted translation
+  units block validation unless explicitly reviewed as configuration exclusions.
+  V2 queries outside the approved roots (including headers) are denied, never
+  silently passed through. Arbitrary generated/build-time membership is unsupported.
 - Configure input tracking is conservative, not a complete CMake dependency
   graph. Keep important external toolchain/vendor `.cmake` files in
   `configureInputs` when File API discovery cannot cover them.
@@ -332,7 +430,7 @@ The guard uses only Python's standard library; it has no pip dependencies.
 From the repository root:
 
 ```powershell
-py -3 plugins/dv-clangd-guard/tests/test_clangd_guard.py
+python -m unittest discover -s plugins/dv-clangd-guard/tests -v
 claude plugin validate plugins/dv-clangd-guard
 claude plugin validate .
 ```

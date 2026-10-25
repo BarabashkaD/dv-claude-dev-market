@@ -121,9 +121,9 @@ class ClangdGuardTests(unittest.TestCase):
         return json.loads((self.root / "build" / "debug" / ".clangd-guard" / "state.json").read_text(encoding="utf-8"))
 
     def require_cmake_fixture(self) -> None:
-        if subprocess.run(["cmake", "--version"], capture_output=True).returncode != 0:
+        if not shutil.which("cmake") or subprocess.run(["cmake", "--version"], capture_output=True).returncode != 0:
             self.skipTest("cmake is not installed")
-        if subprocess.run(["ninja", "--version"], capture_output=True).returncode != 0:
+        if not shutil.which("ninja") or subprocess.run(["ninja", "--version"], capture_output=True).returncode != 0:
             self.skipTest("ninja is not installed")
         compiler_found = any(shutil.which(candidate) for candidate in ("c++", "clang++", "g++", "cl"))
         if not compiler_found:
