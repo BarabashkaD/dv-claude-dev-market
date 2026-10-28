@@ -55,6 +55,12 @@ route and a standalone `.agents/skills` route; hosts do not merge duplicates.
 
 For this plugin, `category` is marketplace-entry metadata only. Its plugin manifest contains supported identity/version/description/author/repository/keywords fields, with no category or plugin dependency field.
 
+### Workflow
+
+| Plugin | What it does |
+|---|---|
+| [`dv-agent-controller`](plugins/dv-agent-controller) | Controller + subagents policy: fresh agent per task, tiered reviews, budget-first briefs, file handovers, STOP gates for outward writes. |
+
 ## Structure
 
 The native ChatGPT Desktop/Codex integration additionally uses
