@@ -74,6 +74,22 @@
       ],
       "category": "engineering",
       "source": "./plugins/dv-freecad-print-workflow"
+    },
+    {
+      "name": "dv-agent-controller",
+      "description": "Controller + subagents development policy for Claude Code: a fresh agent per task, tiered critical reviews with an arbiter, budget-first briefs, file-based reports and handovers, a ledger and a decisions log, and STOP gates for pushes, tags and repository changes. Two skills and generic implementer and critic agents; documentation only.",
+      "version": "0.2.0",
+      "category": "workflow",
+      "keywords": [
+        "subagents",
+        "orchestration",
+        "controller",
+        "code-review",
+        "workflow",
+        "token-budget",
+        "handover"
+      ],
+      "source": "./plugins/dv-agent-controller"
     }
   ]
 }

@@ -1,0 +1,17 @@
+{
+  "name": "dv-agent-controller",
+  "version": "0.2.0",
+  "description": "Controller + subagents development policy: a fresh agent per task, tiered critical reviews, budget-first briefs, file-based reports and handovers, a ledger and a decisions log, and STOP gates for outward writes.",
+  "author": {
+    "name": "BarabashkaD"
+  },
+  "keywords": [
+    "subagents",
+    "orchestration",
+    "controller",
+    "code-review",
+    "workflow",
+    "token-budget",
+    "handover"
+  ]
+}
