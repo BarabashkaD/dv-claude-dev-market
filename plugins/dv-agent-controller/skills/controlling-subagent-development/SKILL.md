@@ -31,6 +31,14 @@ For each task:
 
 5. **Decide** the findings: Critical and Important get a fix round (a fresh fixer); Minor findings are fixed now, folded into a later task, or logged. Write a decision entry and a ledger line (`records.md`). You may reject or downgrade a finding only with a logged technical reason. A deadline or "continue without stop" is never a reason.
 
+## Tests by tier
+
+Use the profile's tiers and name the tier for every check in a brief. T0 while the agent works, after each change; T1 before each commit; T2 when a task is mostly done and at checkpoints, as a separate verifier when it takes long. A UI-only change gets the profile's short UI check instead of full runs. Do not order T2 runs for every small fix: CI on the pull request covers the full matrix.
+
+## Changes and merges
+
+Agents work on a branch from main, never on main. Each change or fix becomes one small pull request; CI runs on it and its findings are fixed in the same pull request. Merge only as one squashed commit after green CI, by whoever the profile names. When the user merges, report "ready for your merge" with the link, what changed and the CI result. Pushing the branch and opening the pull request are outward writes (STOP gates).
+
 ## Limits
 
 | Rule | Value |
@@ -68,3 +76,5 @@ Make technical decisions without asking the user. Log every choice between alter
 | Treating an earlier "go ahead" as consent for the next push | Ask again at each outward write |
 | Two writers in one repository | Stop the second at a WIP commit or handover |
 | Fixing test failures one at a time | Batch rule in every brief: run all, collect, fix together, re-run once |
+| "Run all tests" after every edit | Name the tier: T0 after a change, T1 before a commit, T2 at task end |
+| Fix commits directly on main | Branch, small pull request, CI on it, squash merge |

@@ -32,7 +32,8 @@ It is documentation only: two skills and two agent definitions. No hooks, no scr
 - Risky tasks: 2 critics with different lenses, an arbiter on conflict, a scoped re-review after fixes. Mechanical tasks: 1 critic, a short re-review only after Critical or Important findings.
 - Budgets: implementer handover at ~45 calls, hard stop 60; critic ~40; scoped re-review ~20.
 - At most 2 agents at once plus 1 read-only third; one writer per repository; the next task may run while the previous one is in review.
-- Tests: run all, collect all failures, fix together, re-run once.
+- Tests by tier: T0 (relevant tests) after each change, T1 before each commit, T2 (full workflows, sanitizers, static analysis) at task end and checkpoints; a short check for UI-only changes. Batch rule: run all, collect all failures, fix together, re-run once.
+- Changes: a branch per change, one small pull request with CI on it, fixes in the same pull request, squash merge after green CI; the profile names who merges.
 - The controller restarts at ~100 calls or ~250K context through a handover file.
 
 ## Agent model

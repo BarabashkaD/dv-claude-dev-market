@@ -7,7 +7,7 @@ Placeholders: `<work>` = the working folder from the controller profile, `W` = t
 ```markdown
 # <milestone> <task> brief: <title> (<risky|mechanical>)
 
-W = the workspace folder. Repos on branch <branch>; nothing pushed.
+W = the workspace folder. Work on branch <prefix>/<topic> from main (never on main); nothing pushed.
 Start heads: <repo> <hash>, ...
 
 ## Budget
@@ -26,7 +26,9 @@ waits of at most 270 s. Read by range; keep tool output small. Skip <session-sta
 - Commits: <prefix>, <trailer>. Do not push, tag or write to any hosting service.
 
 ## Verify
-<exact builds, tests, lints and checks>
+- T0 after each change: <the relevant tests>
+- T1 before each commit: <tests, formatter, lints>
+- T2 (only if this task needs it): <full workflows, sanitizers, static analysis>
 
 ## Report
 <work>/<milestone>/task-<task>-report.md: commits per repo (base..head), test results with counts,
@@ -38,7 +40,7 @@ skipped items with reasons, open issues. On handover also: done, left (concrete 
 ```markdown
 # <task>-F brief: fix round (<tier>)
 
-W = the workspace folder. Start head: <repo> <hash> (the reviewed head).
+W = the workspace folder. Start head: <repo> <hash> (the reviewed head), on the task's branch (or the pull request's branch).
 
 ## Budget
 <same budget lines as the task brief>
@@ -52,7 +54,7 @@ Not fixed (logged, leave alone): <IDs>.
 <same rules as the task brief>
 
 ## Verify
-<the checks that cover the fixed findings, plus the per-task test set>
+<the checks that cover the fixed findings (T0), then T1 before the commit>
 
 ## Report
 <work>/<milestone>/task-<task>-F-report.md: per finding FIXED / NOT FIXED with commit and evidence,

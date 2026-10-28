@@ -25,10 +25,18 @@ Copy to `<work>/controller-profile.md` and fill it in with the user. Use paths r
 - release and packaging gates
 - <project-specific areas>
 
-## Tests
-- Per task: <build + all tests + formatter on changed files + privacy lint>
-- Checkpoint (every ~3 tasks and at milestone end): <release build, sanitizers, static analysis, package tests>
+## Tests (tiers; each with its usual time)
+- T0, after each change: <only the relevant tests of the changed repo, e.g. a sanity label or a name filter> (<seconds>)
+- T1, before each commit: <all tests of the changed repo and of the app, quick checks in the repos between, formatter on changed files, privacy lint> (<minutes>)
+- T2, when a task is mostly done and at checkpoints (every ~3 tasks, milestone end): <full workflows on every platform, sanitizers, static analysis; package dry run only for packaging or release changes> (<an hour or more>)
+- UI-only changes (a dialog's look or text): <compile, the one relevant test, start the app once and check it; no full runs>
+- CI: <what runs on every pull request and on every push to main>
 - Configurations that need their own validation when conditional code changes: <list>
+
+## Changes and merges
+- Every change or fix on its own branch from main (<prefix>/<topic>); any number of commits while working.
+- One pull request per change, as small as possible; CI runs on it; findings are fixed in the same pull request.
+- Merge: squash only, after green CI. Who merges: <the user | the controller with the user's go-ahead>.
 
 ## Commits
 - Identity: <how it is set per repo>

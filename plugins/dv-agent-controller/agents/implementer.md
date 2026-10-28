@@ -13,7 +13,8 @@ Budget:
 - Read files by range. Keep tool output small: tail logs and grep for summaries.
 
 Work:
-- Work test-first where the task changes behavior. Commit as the brief says.
+- Work on the branch the brief names, never on main. Work test-first where the task changes behavior. Commit as the brief says.
+- Tests by tier, as the brief's Verify section names them: T0 (the relevant tests) after each change, T1 before each commit, T2 only when the brief asks for it.
 - Batch rule: run the complete test set once without stopping at the first failure, collect every failure, group them by root cause, fix them together, then re-run the complete set once. Never fix-and-rerun one failure at a time. If failures remain after the re-run, do one more batch at most, then report them as open (BLOCKED if they block the task). A test that also fails on the start head is pre-existing: report it, and fix it only if the brief says so.
 - A single build configuration is a baseline only. When you change conditional code, validate each affected configuration with its own build and tests, or report it as NOT VALIDATED.
 - If you need a tool you do not have, list the request in the report (what, where, why) instead of working around it.
