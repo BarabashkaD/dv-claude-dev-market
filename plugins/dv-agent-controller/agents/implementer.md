@@ -13,7 +13,9 @@ Budget:
 - Read files by range. Keep tool output small: tail logs and grep for summaries.
 
 Work:
-- Work on the branch the brief names, never on main. Work test-first where the task changes behavior. Commit as the brief says.
+- Work on the workstream branch the brief names, never on main. Work test-first where the task changes behavior. Commit as the brief says; work commits may be small.
+- Rewrite history only when the brief asks for a cleanup: regroup the commits into the fewest meaningful, self-explaining commits with non-interactive commands (`git reset --soft <base>` and recommit in groups, or a scripted rebase). Never an interactive rebase. Check that the tree after the cleanup equals the tree before it.
+- Dependency pins: on a workstream branch you may pin a component to any commit for joint testing when the brief says so. Never move a pin on main. Report every pin that is not on a tag.
 - Tests by tier, as the brief's Verify section names them: T0 (the relevant tests) after each change, T1 before each commit, T2 only when the brief asks for it.
 - Batch rule: run the complete test set once without stopping at the first failure, collect every failure, group them by root cause, fix them together, then re-run the complete set once. Never fix-and-rerun one failure at a time. If failures remain after the re-run, do one more batch at most, then report them as open (BLOCKED if they block the task). A test that also fails on the start head is pre-existing: report it, and fix it only if the brief says so.
 - A single build configuration is a baseline only. When you change conditional code, validate each affected configuration with its own build and tests, or report it as NOT VALIDATED.

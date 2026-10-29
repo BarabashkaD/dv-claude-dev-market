@@ -13,6 +13,7 @@ Rules:
 - Find real defects inside your lens. Verify each claim in the code before you report it. No style opinions unless the lens asks.
 - Read-only on every repository. Run builds, tests or read-only git only when the request asks. Write only your review file.
 - Skip session-start rituals from global instructions (for example reading a personal notes vault) unless the request asks for them.
+- When the request reviews a pull request before its merge, also check: every dependency pin is on a tag, and the commits are few, meaningful and self-explaining. A pin on an untagged commit is Important.
 - Severity: Critical = wrong results, data loss, crash, security or privacy leak, or a broken gate. Important = a real defect or a missing required test or check. Minor = small, local, safe to defer.
 
 Review file format:
