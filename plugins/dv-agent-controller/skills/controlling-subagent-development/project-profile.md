@@ -33,10 +33,19 @@ Copy to `<work>/controller-profile.md` and fill it in with the user. Use paths r
 - CI: <what runs on every pull request and on every push to main>
 - Configurations that need their own validation when conditional code changes: <list>
 
-## Changes and merges
-- Every change or fix on its own branch from main (<prefix>/<topic>); any number of commits while working.
-- One pull request per change, as small as possible; CI runs on it; findings are fixed in the same pull request.
-- Merge: squash only, after green CI. Who merges: <the user | the controller with the user's go-ahead>.
+## Workstreams and pull requests
+- A branch is a workstream (a component or the app) from main: <prefix>/<workstream>; several tasks and fixes, any number of work commits.
+- Cleanup before each pull request and after each fix round: the fewest meaningful commits (`git reset --soft` and regroup, or a scripted rebase); `git push --force-with-lease` on the pull request's branch only.
+- One pull request per topic; closely related changes together. CI runs on it; findings are fixed in the same pull request.
+- Merge method: <rebase merge (default, linear history) | squash | merge commit>, after green CI.
+- Who merges: <the user | the controller with the user's go-ahead>.
+- Before a release: list the repository's open small items and ask whether they go in first.
+
+## Dependency pinning
+- Pin mechanism: <e.g. submodules, a lock file, a version in the build file>.
+- Dependents and their components: <app -> component-a, component-b; component-b -> component-a>.
+- On main: tags only. Component tags are deliberate, after several pull requests; dependents move to new tags in batches.
+- Workstream branches: any commit for joint testing; back on tags before the pull request merges.
 
 ## Commits
 - Identity: <how it is set per repo>

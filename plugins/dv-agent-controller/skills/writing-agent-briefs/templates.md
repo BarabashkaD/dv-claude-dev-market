@@ -7,8 +7,8 @@ Placeholders: `<work>` = the working folder from the controller profile, `W` = t
 ```markdown
 # <milestone> <task> brief: <title> (<risky|mechanical>)
 
-W = the workspace folder. Work on branch <prefix>/<topic> from main (never on main); nothing pushed.
-Start heads: <repo> <hash>, ...
+W = the workspace folder. Work on the workstream branch <prefix>/<workstream> (never on main); nothing pushed.
+Start heads: <repo> <branch> <hash>, ...
 
 ## Budget
 WIP commit + handover in the report at ~45 calls; hard stop 60. Background runs with foreground
@@ -17,7 +17,7 @@ waits of at most 270 s. Read by range; keep tool output small. Skip <session-sta
 ## Task
 1. The plan text: <plan path> section <n> "<title>", lines <a>-<b> (exact; check them before you dispatch).
 2. Review hand-overs (read only these): <review file>: <finding IDs>.
-3. <ordering constraint, e.g. "change lib first, then bump its pin in app">. You are the only writer in <repos>.
+3. <ordering constraint, e.g. "change the component first, then pin its commit in the app on this branch">. You are the only writer in <repos>.
 
 ## Rules
 - Batch rule: run the complete test set once, collect every failure, group by root cause, fix together, re-run once.
@@ -77,6 +77,30 @@ Start from WIP commit <hash>. The original brief <path> still applies.
 
 ## Report
 Append a section "Continuation <n>" to <the same report file>. Reply in 3 lines.
+```
+
+## Cleanup brief (before a pull request, and after each fix round in it)
+
+```markdown
+# <workstream> cleanup (mechanical)
+
+W = the workspace folder. Branch <prefix>/<workstream>, base <main hash>, head <hash>. Nothing pushed by you.
+
+## Budget
+<same budget lines as the task brief>
+
+## Task
+1. Regroup base..head into the fewest meaningful, self-explaining commits (not necessarily one):
+   <the planned groups, e.g. "1: feature X with its tests; 2: docs">.
+2. Non-interactive only: `git reset --soft <base>`, then stage and commit group by group (or a scripted rebase).
+3. Pins: every dependency pin is on a tag <tag list>, or the report lists it as open.
+
+## Verify
+- `git diff <old head> <new head>` is empty (same tree). T1 at the new head.
+
+## Report
+<work>/<milestone>/<workstream>-cleanup-report.md: old head, new commits (hash + subject), tree check,
+pins and their tags. Reply in 3 lines.
 ```
 
 ## Review request (critic)

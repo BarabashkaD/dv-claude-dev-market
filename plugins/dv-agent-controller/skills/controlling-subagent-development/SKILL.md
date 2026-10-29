@@ -17,7 +17,7 @@ The controller does not write code. It dispatches one fresh agent per task, read
 
 ## Dispatch loop
 
-For each task:
+Before the first dispatch, plan the workstreams (see Workstream planning). Then, for each task:
 
 1. **Classify** it as risky or mechanical (the profile lists the risky areas) and write the class in the ledger.
 2. **Brief** it in a file. REQUIRED SUB-SKILL: `dv-agent-controller:writing-agent-briefs`.
@@ -35,9 +35,29 @@ For each task:
 
 Use the profile's tiers and name the tier for every check in a brief. T0 while the agent works, after each change; T1 before each commit; T2 when a task is mostly done and at checkpoints, as a separate verifier when it takes long. A UI-only change gets the profile's short UI check instead of full runs. Do not order T2 runs for every small fix: CI on the pull request covers the full matrix.
 
-## Changes and merges
+## Workstream planning
 
-Agents work on a branch from main, never on main. Each change or fix becomes one small pull request; CI runs on it and its findings are fixed in the same pull request. Merge only as one squashed commit after green CI, by whoever the profile names. When the user merges, report "ready for your merge" with the link, what changed and the CI result. Pushing the branch and opening the pull request are outward writes (STOP gates).
+After planning changes, features or fixes, look ahead over all planned and open tasks before you dispatch. Group them into workstreams: tasks in the same repository or for the same release go together, so the run needs the fewest version bumps and the fewest full local and CI test cycles. Show the grouping to the user before execution, one row per workstream:
+
+| Workstream | Repositories | Tasks | Releases and bumps | Test cycles |
+|---|---|---|---|---|
+
+## Workstreams and pull requests
+
+- **Branch = workstream.** A branch is one workstream (a component or the app). It may hold several tasks, fixes and improvements, with any number of work commits. Agents never work on main.
+- **Cleanup before the pull request.** Regroup the work commits into the fewest meaningful, self-explaining commits (not necessarily one), so history stays readable. Use non-interactive ways only: `git reset --soft <base>` and recommit in groups, or a scripted rebase. A rewritten branch is pushed with `git push --force-with-lease`, and only the pull request's own branch.
+- **One pull request = one topic.** Closely related changes go into the same pull request; unrelated ones get their own.
+- **CI on the pull request.** Its findings are fixed in the same pull request, followed by another cleanup.
+- **Merge** by the profile's merge method (default: rebase merge, linear history) after green CI, by whoever the profile names. When the user merges, report "ready for your merge" with the link, what changed and the CI result.
+- **Batch per release.** Before a release, list the repository's open small items and ask the user whether they go in first.
+- Pushing the branch, force-pushing it and opening the pull request are outward writes (STOP gates).
+
+## Dependency pinning
+
+- On main, every repository depends only on tagged versions of its components.
+- A merged component change does not trigger updates in its dependents. Component releases (tags) are deliberate, after several pull requests.
+- Dependents (apps and other components) move their main to new tags in batches, several components at once.
+- A workstream branch may pin any commit of a component for joint testing. Before its pull request merges, every pin is back on a tag.
 
 ## Limits
 
@@ -77,4 +97,9 @@ Make technical decisions without asking the user. Log every choice between alter
 | Two writers in one repository | Stop the second at a WIP commit or handover |
 | Fixing test failures one at a time | Batch rule in every brief: run all, collect, fix together, re-run once |
 | "Run all tests" after every edit | Name the tier: T0 after a change, T1 before a commit, T2 at task end |
-| Fix commits directly on main | Branch, small pull request, CI on it, squash merge |
+| Fix commits directly on main | Commit on the workstream branch; pull request with CI; the profile's merge method |
+| One pull request per tiny fix | One pull request per topic; related changes together |
+| Dozens of work commits merged as they are | Cleanup pass first: the fewest meaningful commits |
+| Bumping every dependent after each component merge | Tag deliberately; move dependents to new tags in batches |
+| Merging a pull request that pins an untagged commit | Move every pin back to a tag before the merge |
+| Dispatching task by task without a look ahead | Group the tasks into workstreams and show the grouping first |

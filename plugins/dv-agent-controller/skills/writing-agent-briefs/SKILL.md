@@ -1,6 +1,6 @@
 ---
 name: writing-agent-briefs
-description: Use when writing the brief or dispatch prompt for an implementer, fixer, continuation, verifier, reviewer or arbiter subagent, or when a subagent overran its budget, returned a long reply or left no report file.
+description: Use when writing the brief or dispatch prompt for an implementer, fixer, continuation, cleanup, verifier, reviewer or arbiter subagent, or when a subagent overran its budget, returned a long reply or left no report file.
 ---
 
 # Writing agent briefs
@@ -30,7 +30,8 @@ Copy these into every implementer, fixer and continuation brief:
 - Budget: "WIP commit + handover in the report at ~45 calls; hard stop 60. Background runs with foreground waits of at most 270 s. Read by range; keep tool output small."
 - Batch rule: "Run the complete test set once without stopping at the first failure, collect every failure, group them by root cause, fix them together, re-run the complete set once. If failures remain after the re-run, do one more batch at most, then report them as open (BLOCKED if they block the task). A test that also fails on the start head is pre-existing: report it, and fix it only if the brief says so."
 - Configurations: "A single build configuration is a baseline only. When conditional code changes, validate each affected configuration with its own build and tests, or report it as NOT VALIDATED."
-- Branch: "Work on branch <prefix>/<topic> from main, never on main. Do not push."
+- Branch: "Work on the workstream branch <prefix>/<workstream>, never on main. Do not push." Name the start head when the branch already exists.
+- Pins (when the task spans a component and its dependent): "On this branch the dependent may pin the component's commit <hash> for joint testing; report every pin not on a tag."
 - Tests: in Verify, name the tier of every check (T0 after each change, T1 before each commit, T2 only when the task needs it), with the profile's commands.
 
 Critic briefs use "~40 calls" (scoped re-review: "~20 calls") and "read-only: write only the review file".
@@ -58,3 +59,4 @@ Give critics a package file, not a pasted diff: repo, base..head per repo, the f
 | Brief says "fix the findings" | Name each finding by ID with its review file and line |
 | Same lens for both critics | Name two different lenses |
 | Approximate line ranges ("~300-330") | Check the range and write it exactly |
+| A new branch per small task in the same workstream | Continue the workstream branch from its head |
