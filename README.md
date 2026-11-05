@@ -55,6 +55,12 @@ route and a standalone `.agents/skills` route; hosts do not merge duplicates.
 
 For this plugin, `category` is marketplace-entry metadata only. Its plugin manifest contains supported identity/version/description/author/repository/keywords fields, with no category or plugin dependency field.
 
+### FPGA design
+
+| Plugin | What it does |
+|---|---|
+| [`dv-netlist-equivalence`](plugins/dv-netlist-equivalence) | Proves that a refactored Xilinx ISE/XST design synthesizes to equivalent logic when the bitstream changed and no formal tool is available: a validated register-cut-point checker for netgen Verilog netlists (exhaustive/BDD, exact register correspondence) and a mutant generator to validate it first. Category `engineering`. |
+
 ### Workflow
 
 | Plugin | What it does |

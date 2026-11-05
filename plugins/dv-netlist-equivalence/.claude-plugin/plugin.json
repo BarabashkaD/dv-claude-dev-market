@@ -1,0 +1,18 @@
+{
+  "name": "dv-netlist-equivalence",
+  "version": "0.1.0",
+  "description": "Prove that a refactored Xilinx ISE/XST design synthesizes to equivalent logic: a validated register-cut-point checker for flat netgen Verilog netlists (exhaustive and BDD comparison, exact register correspondence) plus a mutant generator to validate the checker first.",
+  "author": {
+    "name": "BarabashkaD"
+  },
+  "keywords": [
+    "fpga",
+    "xilinx",
+    "ise",
+    "xst",
+    "netgen",
+    "equivalence-checking",
+    "netlist",
+    "engineering"
+  ]
+}

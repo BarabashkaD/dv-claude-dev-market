@@ -90,6 +90,23 @@
         "handover"
       ],
       "source": "./plugins/dv-agent-controller"
+    },
+    {
+      "name": "dv-netlist-equivalence",
+      "description": "Prove that a refactored Xilinx ISE/XST design synthesizes to equivalent logic: a validated register-cut-point checker for flat netgen Verilog netlists (exhaustive and BDD comparison, exact register correspondence) plus a mutant generator to validate the checker first.",
+      "version": "0.1.0",
+      "category": "engineering",
+      "keywords": [
+        "fpga",
+        "xilinx",
+        "ise",
+        "xst",
+        "netgen",
+        "equivalence-checking",
+        "netlist",
+        "engineering"
+      ],
+      "source": "./plugins/dv-netlist-equivalence"
     }
   ]
 }
