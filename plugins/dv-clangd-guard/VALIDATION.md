@@ -1,16 +1,21 @@
-# Validation: 0.2.0
+# Validation: 0.3.0
 
 ## Executed in the assistant's isolated Linux workspace
 
-- Python 3.12 unittest discovery: **28 passed, 0 skipped**.
+- Python 3.12 unittest discovery: **36 passed, 0 skipped**.
 - Includes real CMake 4.4.4 / Ninja 1.13.2 / GNU C++ multi-repository fixtures.
 - Covers sibling scope, independent CMake source identity, exact exclusions,
   active/excluded/header/out-of-scope queries, mixed queries, added/removed files,
   configuration mismatch/switch, stale exclusions, source-extension filtering,
   symlink root escape, approval changes, failed configure, previous timeout/crash,
   locking, File API discovery, malformed/replaced databases, and v1 compatibility.
+- Diagnostic tests additionally cover missing/invalid profiles, absent/invalid state,
+  wrong CMake identity, fresh/stale reports, duplicate counts, bounded coverage,
+  exclusion reasons, secret-free output and complete filesystem non-mutation
+  (files, directories, bytes, mtimes, including per-user approval state).
+- Skill frontmatter validator passed.
 - Python bytecode compilation and `git diff --check` passed.
-- Plugin/marketplace JSON parsed; guard version metadata agrees at 0.2.0.
+- Plugin/marketplace JSON parsed; guard version metadata agrees at 0.3.0.
 
 Run the complete suite (CMake, Ninja, and a C++ compiler required for real fixtures):
 

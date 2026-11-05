@@ -28,7 +28,7 @@
     {
       "name": "dv-clangd-guard",
       "description": "Fail-closed CMake compile-database freshness guard for Claude Code's official clangd LSP plugin. Requires a separately installed clangd executable.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "category": "tooling",
       "keywords": [
         "clangd",

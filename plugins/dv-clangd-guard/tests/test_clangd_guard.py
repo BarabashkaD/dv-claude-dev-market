@@ -133,6 +133,144 @@ class ClangdGuardTests(unittest.TestCase):
         self.config.write_text(json.dumps(profile, indent=2), encoding="utf-8")
         self.approve_profile()
 
+    def diagnose(self, *extra: str) -> tuple[subprocess.CompletedProcess[str], dict]:
+        env = {**os.environ, "CLANGD_GUARD_CONFIG": str(self.config),
+               "CLAUDE_PROJECT_DIR": str(self.root), "CLANGD_GUARD_STATE_DIR": str(self.state_root)}
+        result = subprocess.run([sys.executable, str(HOOK), "--diagnose", "--project-dir", str(self.root), *extra],
+                                text=True, capture_output=True, env=env)
+        return result, json.loads(result.stdout)
+
+    def filesystem_snapshot(self) -> dict:
+        # Include directories, bytes and mtimes in project AND per-user trust state.
+        return {str(p.relative_to(self.temp.name)): (p.is_dir(), p.stat().st_mtime_ns,
+                None if p.is_dir() else p.read_bytes())
+                for p in Path(self.temp.name).rglob("*")}
+
+    def test_diagnose_uninitialized_is_read_only_and_does_not_configure(self) -> None:
+        marker = self.root / "should-not-exist"
+        self.write_profile(configure={"command": [sys.executable, "-c", f"open({str(marker)!r}, 'w').write('ran')"],
+                                      "cwd": ".", "timeoutSeconds": 30})
+        before = self.filesystem_snapshot()
+        result, report = self.diagnose()
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(report["checks"]["profile"]["status"], "valid")
+        self.assertEqual(report["checks"]["state"]["status"], "absent")
+        self.assertEqual(report["checks"]["database"]["status"], "missing")
+        self.assertEqual(report["coverage"]["status"], "unavailable")
+        self.assertEqual(report["checks"]["configurationIdentity"]["status"], "not_configured")
+        self.assertEqual(report["checks"]["freshness"]["status"], "stale")
+        self.assertEqual(before, self.filesystem_snapshot())
+
+    def test_diagnose_missing_and_invalid_profiles_are_distinct(self) -> None:
+        self.config.unlink()
+        before = self.filesystem_snapshot()
+        result, report = self.diagnose()
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(report["checks"]["profile"]["status"], "missing")
+        self.assertEqual(before, self.filesystem_snapshot())
+        self.config.write_text('{broken', encoding='utf-8')
+        result, report = self.diagnose()
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(report["checks"]["profile"]["status"], "invalid")
+
+    def test_diagnose_counts_duplicates_exclusions_missing_and_outside(self) -> None:
+        inactive = self.root / "src" / "posix.cpp"
+        inactive.write_text('int posix;')
+        (self.root / "src" / "new.cpp").write_text('int unlisted;')
+        raw = json.loads(self.config.read_text())
+        raw.pop("projectRoot")
+        raw.update(version=2, workspaceRoot=".", cmakeSourceRoot=".", configuration="Debug",
+                   excludedSources=[{"path": "src/posix.cpp", "reason": "POSIX only"}])
+        self.config.write_text(json.dumps(raw))
+        build = self.root / "build/debug"
+        build.mkdir(parents=True)
+        main = str(self.root / "src/main.cpp")
+        secret = "TOP_SECRET_COMMAND_VALUE"
+        entries = [{"file": p, "directory": str(self.root), "command": secret}
+                   for p in [main, main, str(build / "generated.cpp"), str(self.root / "resource.rc")]]
+        (build / "compile_commands.json").write_text(json.dumps(entries))
+        before = self.filesystem_snapshot()
+        result, report = self.diagnose("--detail-limit", "1")
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn(secret, result.stdout)
+        db, coverage = report["checks"]["database"], report["coverage"]
+        self.assertEqual((db["entries"], db["uniqueFiles"], db["duplicateEntries"]), (4, 3, 1))
+        self.assertEqual(coverage["scannedTranslationUnits"], 3)
+        self.assertEqual(coverage["expectedTranslationUnits"], 2)
+        self.assertEqual(coverage["missingSources"]["items"], [str(self.root / "src/new.cpp")])
+        self.assertEqual(coverage["excludedSources"]["items"][0]["reason"], "POSIX only")
+        self.assertEqual(coverage["databaseFilesOutsideSourceRoots"]["total"], 2)
+        self.assertEqual(coverage["databaseFilesOutsideSourceRoots"]["omitted"], 1)
+        self.assertEqual(coverage["databaseFilesInBuildDirectory"]["total"], 1)
+        self.assertEqual(coverage["nonTranslationUnitDatabaseFiles"]["total"], 1)
+        self.assertEqual(before, self.filesystem_snapshot())
+
+    def test_diagnose_malformed_database_and_state_do_not_look_absent(self) -> None:
+        build = self.root / "build/debug"
+        (build / ".clangd-guard").mkdir(parents=True)
+        (build / "compile_commands.json").write_text('broken')
+        (build / ".clangd-guard/state.json").write_text('broken')
+        before = self.filesystem_snapshot()
+        _, report = self.diagnose()
+        self.assertEqual(report["checks"]["database"]["status"], "invalid")
+        self.assertEqual(report["coverage"]["status"], "unavailable")
+        self.assertEqual(report["checks"]["state"]["status"], "invalid")
+        self.assertEqual(report["checks"]["freshness"]["status"], "unknown")
+        self.assertEqual(before, self.filesystem_snapshot())
+
+    def test_diagnose_fresh_and_stale_real_fixture_no_mutations_or_secrets(self) -> None:
+        self.require_cmake_fixture()
+        self.assertEqual(self.run_guard().stdout, "")
+        before = self.filesystem_snapshot()
+        result, report = self.diagnose()
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(report["checks"]["freshness"]["status"], "fresh")
+        self.assertEqual(report["checks"]["configurationIdentity"]["status"], "valid")
+        self.assertEqual(report["checks"]["approval"]["status"], "approved")
+        self.assertEqual(report["coverage"]["status"], "valid")
+        self.assertEqual(before, self.filesystem_snapshot())
+        (self.root / "CMakeLists.txt").write_text((self.root / "CMakeLists.txt").read_text() + "\n# change\n")
+        before = self.filesystem_snapshot()
+        _, report = self.diagnose()
+        self.assertEqual(report["checks"]["freshness"]["status"], "stale")
+        self.assertEqual(before, self.filesystem_snapshot())
+
+    def test_diagnose_wrong_identity_is_separate_from_missing_state(self) -> None:
+        build = self.root / "build/debug"
+        build.mkdir(parents=True)
+        (build / "CMakeCache.txt").write_text("CMAKE_HOME_DIRECTORY:INTERNAL=/wrong/source\n")
+        before = self.filesystem_snapshot()
+        _, report = self.diagnose()
+        self.assertEqual(report["checks"]["state"]["status"], "absent")
+        self.assertEqual(report["checks"]["configurationIdentity"]["status"], "invalid")
+        self.assertEqual(report["checks"]["database"]["status"], "missing")
+        self.assertEqual(report["coverage"]["status"], "unavailable")
+        self.assertEqual(before, self.filesystem_snapshot())
+
+    def test_diagnose_never_discloses_environment_values(self) -> None:
+        self.require_cmake_fixture()
+        self.assertEqual(self.run_guard().stdout, "")
+        secret = "PRIVATE_ENVIRONMENT_TOKEN_0123"
+        previous = os.environ.get("CC")
+        try:
+            os.environ["CC"] = secret
+            before = self.filesystem_snapshot()
+            result, report = self.diagnose()
+            self.assertEqual(report["checks"]["freshness"]["status"], "stale")
+            self.assertNotIn(secret, result.stdout + result.stderr)
+            self.assertEqual(before, self.filesystem_snapshot())
+        finally:
+            if previous is None:
+                os.environ.pop("CC", None)
+            else:
+                os.environ["CC"] = previous
+
+    def test_diagnose_cannot_be_combined_with_approve(self) -> None:
+        before = self.filesystem_snapshot()
+        result = subprocess.run([sys.executable, str(HOOK), "--diagnose", "--approve"], capture_output=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(before, self.filesystem_snapshot())
+
     def test_first_call_configures_real_fixture_and_second_call_is_noop(self) -> None:
         self.require_cmake_fixture()
         first = self.run_guard()

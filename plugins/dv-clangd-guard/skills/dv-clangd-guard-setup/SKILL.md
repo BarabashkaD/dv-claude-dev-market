@@ -24,6 +24,26 @@ plugin to use a current CMake compilation database.
   `py -3`, `python3`, a shell alias, or a PowerShell function for the hook's
   executable-form command.
 
+## Audit before changing anything
+
+- Check executable resolution and versions in the environment that actually
+  launches Claude, plus installed/enabled plugins. A binary, provider plugin,
+  hook and skill are separate components. Install only missing tools; distinguish
+  a missing executable from an existing one absent from PATH.
+- Resolve the active plugin registration and hook path/version, not just a folder
+  left in the plugin cache. After update, reload/restart as supported by the host.
+  A diagnostic report identifies the script inspected, not the script the host
+  necessarily executes. Confirm execution through a real guarded LSP request.
+- Run `python <plugin-root>/hooks/clangd_guard.py --diagnose --project-dir <workspace>`
+  before repair. Read its separate profile, database, identity, state, approval,
+  freshness and coverage statuses. Missing state is not the same as malformed
+  profile or wrong CMake identity. This command never configures or approves.
+- Record a compact before/after report when investigating a change: selected
+  roots/configuration, database SHA-256, **entry count and unique-file count**,
+  expected/represented sources and exclusions. Save it only to an agreed location;
+  review project paths/reasons before sharing. Do not claim byte-level equality
+  with a previous database that was overwritten or never captured.
+
 ## Profile
 
 Create `.clangd-guard.json` at the selected workspace root. Adapt the example to
@@ -90,6 +110,12 @@ Before requesting setup approval:
 - Set `configuration` to the exact `CMAKE_BUILD_TYPE`; v2 rejects multi-config
   caches. Use a separate Ninja build with the existing compiler/toolchain and
   intended flags. Do not switch to Clang merely because clangd is installed.
+- Identify targets belonging to the selected top-level configure, not every
+  `.vcxproj` found recursively under its build folder. Nested package-consumer
+  and other CTest fixture projects can have independent configure/build trees.
+  Classify missing files as another platform/feature, disabled target, separate
+  fixture, generated source, or a genuinely omitted source before proposing a fix.
+  Fixture exclusions do not remove those fixtures from their own build/test duties.
 - Compare discovered translation units with the intended configuration. For
   legitimately inactive platform/feature/top-level-only sources, propose exact
   `excludedSources` entries with `path` and `reason`, reviewed by the user.
@@ -108,6 +134,11 @@ Before requesting setup approval:
   MSVC environment in its own process; verify its executable exists and that it
   preserves configure failures. Track the wrapper and every cache/toolchain file
   it reads in `configureInputs`. Track influential inherited environment names.
+  On Windows, compare compiler path, toolset, architecture and Windows SDK with
+  the selected baseline after loading the process-local developer environment.
+  Do not silently accept a different SDK. Track PATH when it selects tools, or
+  pin verified executable paths and still track other influential inherited inputs.
+  Do not globally change the compiler or system/user environment for this setup.
 - Existing v1 profiles keep legacy behavior. Migrate explicitly to v2, remove
   `projectRoot`, rebase paths, and obtain a new approval. Never silently patch an
   installed plugin or bypass checks to make setup pass.
@@ -119,26 +150,40 @@ See the plugin README for the multi-repository example and migration details.
 1. Ensure the official `clangd-lsp@claude-plugins-official` dependency is
    installed and `clangd` itself is on the PATH of the shell that starts
    Claude Code.
-2. Confirm the selected CMake command succeeds manually once, with
-   `CMAKE_EXPORT_COMPILE_COMMANDS=ON` (or the equivalent preset cache option).
-3. If the build directory is outside the source tree's default clangd search,
-   merge this into the project-root `.clangd`, preserving all existing keys and
-   obtaining explicit approval before editing:
+2. Show the exact proposed files and command; obtain the required approval,
+   write the reviewed profile and seal it. A manual configure can diagnose a
+   toolchain problem but is not guard validation and cannot record fresh state.
+   Prefer the actual guard path for the end-to-end first configure.
+3. Merge `.clangd` routing to the selected build directory with existing YAML,
+   after approval. Preserve narrower overrides; inspect them for sibling repos:
 
    ```yaml
    CompileFlags:
      CompilationDatabase: build/debug
    ```
 
-   Replace `build/debug` with the exact configured build directory. The guard
-   cannot prove that a live clangd provider loaded the database.
-4. For multi-repository workspaces, test an active translation unit in each
-   sibling repository, an intentionally excluded file (must deny with reason),
-   an out-of-scope file (must deny), and a header in approved roots. Verify the
-   DB routes correctly for siblings and inspect narrower `.clangd` overrides.
-5. Ask Claude to use the LSP on a matching C/C++ file. The first call may run
-   the configured configure command. A stale, missing, malformed, or replaced
-   database remains blocked until a successful validation.
+4. Test through actual LSP calls: active files in sibling repositories, an exact
+   excluded file (deny with reason), an out-of-scope file (deny), and a header in
+   scope. Repeat an unchanged successful request and compare state/DB evidence:
+   it must not configure again. Report guard decision separately from LSP result;
+   exit code zero alone is not success because structured denials also exit zero.
+5. Verify live routing using the effective clangd command/database path from
+   runtime evidence where available, compared with configuration-specific defines
+   and include paths. Go-to-definition or one resolved include alone is not proof.
+   If direct evidence is unavailable, report NOT FULLY VERIFIED. A file with
+   multiple compile commands does not imply clangd validates every target variant.
+6. If worker agents will use LSP, verify tool availability and an allowed/denied
+   guarded request from each relevant agent type. Parent-session success is not
+   proof of worker access or hook execution. Do not add broad tool discovery or
+   unrelated permissions based on a hypothesis; use documented host behavior.
+   Never probe private integrations to test permission boundaries. If direct LSP
+   access is unavailable, propose parent-mediated guarded queries without claiming
+   native worker integration, and obtain approval for workflow/permission changes.
+7. Report stages separately: tools/provider installed, active hook exercised,
+   configure/database validated, unchanged repeat, live routing, worker integration.
+   Use PASS/FAIL/NOT RUN and NOT VALIDATED/NOT FULLY VERIFIED where appropriate.
+   Do not restart unrelated project work or expand into newly surfaced clang-tidy
+   findings without authorization.
 
 Invoke this skill in Claude Code as `/dv-clangd-guard:dv-clangd-guard-setup`.
 

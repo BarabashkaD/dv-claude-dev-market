@@ -21,6 +21,7 @@ from typing import Any, Iterable
 from urllib.parse import unquote, urlparse
 
 
+PLUGIN_VERSION = "0.3.0"
 STATE_VERSION = 1
 DEFAULT_EXTENSIONS = {
     ".c",
@@ -781,6 +782,127 @@ def _approve_profile(profile: dict[str, Any]) -> None:
     )
 
 
+def _sample(items: list[Any], limit: int) -> dict[str, Any]:
+    """Bound report detail without truncating counts or altering validation."""
+    return {"total": len(items), "items": items[:limit], "omitted": max(0, len(items) - limit)}
+
+
+def diagnose(project_dir: str, limit: int = 20) -> tuple[dict[str, Any], int]:
+    """Inspect only. Never configure, approve, lock, create queries, or write state.
+
+    This is an observation, not a hook decision or live clangd attestation.
+    Reads are not an atomic filesystem snapshot; concurrent changes can race it.
+    """
+    report: dict[str, Any] = {
+        "reportVersion": 1, "pluginVersion": PLUGIN_VERSION,
+        "hookPath": str(Path(__file__).resolve()), "readOnly": True,
+        "status": "inspection_complete", "checks": {},
+        "limitations": [
+            "Not a hook allow decision; queried-file scope and membership still apply.",
+            "Does not prove this hook is registered or that live clangd loaded this database or a particular command.",
+            "Not an atomic snapshot; rerun after concurrent configure or file changes settle.",
+            "Paths and exclusion reasons may contain private project details; review before sharing.",
+        ],
+    }
+    checks = report["checks"]
+    payload = {"cwd": project_dir, "project_directory": project_dir}
+    try:
+        raw, config_path, selected_dir = _find_profile(payload)
+    except GuardError as exc:
+        missing = str(exc).startswith("No explicit .clangd-guard.json")
+        checks["profile"] = {"status": "missing" if missing else "invalid", "reason": str(exc)}
+        report["status"] = "profile_unavailable"
+        return report, 1
+    try:
+        profile = _validate_profile(raw, config_path, selected_dir)
+    except GuardError as exc:
+        checks["profile"] = {"status": "invalid", "path": str(config_path), "reason": str(exc)}
+        report["status"] = "profile_unavailable"
+        return report, 1
+    checks["profile"] = {"status": "valid", "path": str(config_path), "version": profile["profile_version"]}
+    report["scope"] = {
+        "workspaceRoot": str(profile["project_root"]),
+        "cmakeSourceRoot": str(profile["cmake_source_root"]),
+        "buildDir": str(profile["build_dir"]),
+        "configuration": profile["configuration"],
+        "sourceRoots": _sample([str(p) for p in profile["source_roots"]], limit),
+        "autoConfigure": profile["auto_configure"],
+    }
+    try:
+        _require_trust(profile)
+        checks["approval"] = {"status": "approved"}
+    except GuardError:
+        # Do not expose the per-user seal or its contents.
+        checks["approval"] = {"status": "missing_or_invalid", "reason": "No matching approval seal for this profile."}
+    state = None
+    try:
+        state = _load_state(profile["state_path"])
+        checks["state"] = {"status": "present" if state is not None else "absent"}
+    except GuardError as exc:
+        checks["state"] = {"status": "invalid", "reason": str(exc)}
+    try:
+        _configuration_identity(profile)
+        checks["configurationIdentity"] = {"status": "valid"}
+    except GuardError as exc:
+        checks["configurationIdentity"] = {
+            "status": "not_configured" if not profile["cache"].is_file() else "invalid",
+            "reason": str(exc),
+        }
+    report["coverage"] = {"status": "unavailable", "reason": "A readable, valid database is required for coverage comparison."}
+    try:
+        digest, members = _database_members(profile["database"])
+        if digest == "<missing>":
+            checks["database"] = {"status": "missing", "path": str(profile["database"])}
+        else:
+            entries = _read_json(profile["database"], "compile database")
+            # Parse again for entry counts only, never emit commands/arguments.
+            counts: dict[str, int] = {}
+            for entry in entries:
+                file_path = _path(entry["file"], Path(entry["directory"]))
+                key = str(file_path)
+                counts[key] = counts.get(key, 0) + 1
+            duplicates = [{"path": key, "entries": count} for key, count in sorted(counts.items()) if count > 1]
+            checks["database"] = {
+                "status": "valid", "path": str(profile["database"]), "sha256": digest,
+                "entries": len(entries), "uniqueFiles": len(members),
+                "duplicateEntries": len(entries) - len(members),
+                "filesWithMultipleCommands": _sample(duplicates, limit),
+            }
+            scanned = {p for p in _source_members(profile, members) if Path(p).suffix.lower() in TRANSLATION_UNIT_EXTENSIONS}
+            member_set = set(members)
+            exclusions = profile["excluded_sources"]
+            missing = sorted(scanned - member_set - set(exclusions))
+            stale = sorted(p for p in exclusions if p not in scanned or p in member_set)
+            outside = sorted(p for p in members if not any(Path(p).is_relative_to(root) for root in profile["source_roots"]))
+            in_build = sorted(p for p in members if Path(p).is_relative_to(profile["build_dir"]))
+            non_tu = sorted(p for p in members if Path(p).suffix.lower() not in TRANSLATION_UNIT_EXTENSIONS)
+            reason = _source_coverage(profile, members)
+            report["coverage"] = {
+                "status": "valid" if reason is None else "invalid", "reason": reason,
+                "scannedTranslationUnits": len(scanned),
+                "representedScannedTranslationUnits": len(scanned & member_set),
+                "expectedTranslationUnits": len(scanned - set(exclusions)),
+                "missingSources": _sample(missing, limit),
+                "excludedSources": _sample([{"path": p, "reason": r} for p, r in sorted(exclusions.items())], limit),
+                "staleExclusions": _sample(stale, limit),
+                "databaseFilesOutsideSourceRoots": _sample(outside, limit),
+                "databaseFilesInBuildDirectory": _sample(in_build, limit),
+                "nonTranslationUnitDatabaseFiles": _sample(non_tu, limit),
+                "note": "Categories can overlap. In-build paths are not proof of generation. Multiple commands do not prove clangd validates every variant.",
+            }
+    except (GuardError, KeyError, TypeError, ValueError) as exc:
+        checks["database"] = {"status": "invalid", "reason": str(exc)}
+    if checks["state"]["status"] == "invalid":
+        checks["freshness"] = {"status": "unknown", "reason": "State is invalid; no freshness claim is possible."}
+    else:
+        try:
+            fresh, reason = _freshness(profile, state)
+            checks["freshness"] = {"status": "fresh" if fresh else "stale", "reason": reason}
+        except GuardError as exc:
+            checks["freshness"] = {"status": "unknown", "reason": str(exc)}
+    return report, 0
+
+
 def _deny(reason: str) -> int:
     print(
         json.dumps(
@@ -843,10 +965,28 @@ def main(stdin: str | None = None) -> int:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="dv-clangd-guard hook and explicit profile approval helper")
-    parser.add_argument("--approve", action="store_true", help="approve the current profile for automatic configure")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--approve", action="store_true", help="approve the current profile for automatic configure")
+    mode.add_argument("--diagnose", action="store_true", help="print a read-only JSON diagnostic report; never configure or approve")
+    parser.add_argument("--detail-limit", type=int, default=20, help="maximum items per diagnostic detail list (1-100; default 20)")
     parser.add_argument("--project-dir", default=os.getcwd(), help="project directory containing the profile")
     parser.add_argument("--config", help="explicit .clangd-guard.json path")
     args = parser.parse_args()
+    if args.diagnose:
+        if not 1 <= args.detail_limit <= 100:
+            parser.error("--detail-limit must be between 1 and 100")
+        if args.config:
+            os.environ["CLANGD_GUARD_CONFIG"] = args.config
+        try:
+            report, code = diagnose(args.project_dir, args.detail_limit)
+            print(json.dumps(report, indent=2, sort_keys=True))
+            raise SystemExit(code)
+        except Exception:
+            # Avoid echoing command arguments or environment values from exceptions.
+            print(json.dumps({"reportVersion": 1, "pluginVersion": PLUGIN_VERSION,
+                              "readOnly": True, "status": "inspection_error",
+                              "reason": "Inspection failed; check file access and concurrent changes."}))
+            raise SystemExit(2)
     if args.approve:
         if args.config:
             os.environ["CLANGD_GUARD_CONFIG"] = args.config
