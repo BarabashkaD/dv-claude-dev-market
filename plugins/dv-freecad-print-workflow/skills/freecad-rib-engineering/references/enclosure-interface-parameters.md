@@ -19,7 +19,7 @@ Keep the same example numbers during user discussions. Images locate relevant pr
 
 - Lengths use explicit units, normally mm; angles use degrees; counts are integers. Name the reference plane, fit direction and feature owner.
 - Read existing case/lid dimensions from the parent definition rather than introducing conflicting duplicate inputs.
-- Use preferred model-level values with per-interface/per-location overrides and recorded reasons. Review material, printer, orientation, component neighborhood, remaining wall thickness, assembly access and required service behavior. No universal clearance, radius or feature size is adopted.
+- Use preferred model-level values with per-interface/per-location overrides and recorded reasons. Review material, printer, orientation, component neighborhood, remaining wall thickness, assembly access and required service behavior. No universal clearance, radius or feature size is adopted; starting values a project may override are in [FDM defaults](fdm-defaults.md).
 - Distinguish clearance **per side**, total width difference and **diametral** clearance. Keep lateral, axial and end clearances separate.
 - Derive a mating feature from its counterpart plus the chosen fit. Do not independently dimension both sides and then also constrain their clearance.
 - Use explicit bearing/stop surfaces to establish the seated position. A visible seam gap must be compatible with those surfaces rather than leaving the lid unsupported.

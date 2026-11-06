@@ -3,6 +3,7 @@
 Use actual outcomes: PASS | FAIL | NOT RUN | NOT APPLICABLE (with reason). Do not replace missing raw evidence with a hand-written PASS.
 
 ## Identity
+- FreeCAD and OpenCASCADE versions used for the checks:
 - CAD source path/revision and content hash where available:
 - Export path/hash, units, mesh/export settings and part mapping:
 - Bambu version/build and project path/hash:
@@ -14,7 +15,7 @@ For each check: scope/target parts, acceptance condition, actual result, raw rep
 - CAD recompute, expected solids, geometric validity:
 - Critical dimensions, interfaces, assembly/motion/access:
 - Regeneration cases and per-part assertions; negative regressions recorded separately:
-- Export scale, orientation, completeness and mesh integrity:
+- Export scale, orientation, completeness and mesh integrity; re-import compared with the source (volume, area, bounding box, part count):
 - Slicing exit/result status, full diagnostics and warnings:
 - Layer review: thin features, gaps, supports, bridges and support access:
 - Estimated print time/material, with source and no implied physical accuracy:
@@ -22,6 +23,6 @@ For each check: scope/target parts, acceptance condition, actual result, raw rep
 
 ## Findings and readiness
 - Outstanding findings / accepted tradeoffs / owner decision:
-- CAD changes since last slice, if any:
+- CAD changes since last slice, if any, and the evidence they made stale (re-run or NOT RUN):
 - Status: CAD-ready, slice-reviewed, print-package-ready, or physically-qualified (state scope):
 - Dispatch authorization: not included merely by preparing this record.

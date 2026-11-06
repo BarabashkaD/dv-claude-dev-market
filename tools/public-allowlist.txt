@@ -1,0 +1,11 @@
+# Generic, non-personal snippets already present in public docs of this repo.
+# Each line is masked (case-insensitive substring) before scanning; this file
+# therefore does not trip the checker on itself.
+$HOME/.local/bin
+$HOME/.local/share/dv-clangd-guard
+(`~/.claude/venvs/` by default,
+never assume `~/.claude/skills/...` or any
+uses `$HOME`, falling back
+$HOME is set by Linux
+neither \$HOME nor
+(~/.claude/venvs/<skill>/bin/python3)

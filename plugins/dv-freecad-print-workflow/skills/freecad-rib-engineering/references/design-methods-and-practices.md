@@ -85,8 +85,8 @@ Proposed comparison set: an unchanged panel, a thicker plain panel of comparable
 
 ## Environment and adoption status
 
-Use the installed vindu939 production suite for engineering methods, with the current local stage sequence and MCP-preferred execution policy. Scripts, macros and FreeCADCmd are bounded exceptions when no suitable supported route exists or they materially shorten the path, preferably using built-in high-level editable FreeCAD features. Current task and environment permissions govern execution; skill availability is not blanket authorization. Use the `freecad-mcp-operations` skill for the existing MCP connection and keep upstream suite files unchanged.
+Prefer built-in high-level editable FreeCAD features. Execution follows the three ways of working in [cad-print-workflow](../../cad-print-workflow/SKILL.md): headless scripts for geometry and checks, a separate GUI-macro run for files a person will open, MCP only for the user's live window. Current task and environment permissions govern execution; skill availability is not blanket authorization.
 
-The [rib selection and modeling guide](rib-selection-and-modeling-guide.md) provides type definitions, selection questions, modeling steps and connection checks. A representative CAD/print trial is still required.
+The [rib design reference](rib-design.md) provides type definitions, selection questions, modeling steps and connection checks. A representative CAD/print trial is still required.
 
 The next useful engineering trial would compare the four panel candidates with explicit dimensions and load assumptions, test editable parameter changes, inspect slicing, and record results. These are configurable package defaults, not evidence of a completed engineering trial.

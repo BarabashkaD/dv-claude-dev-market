@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0
+
+- New skill `guarding-autonomous-runs`: the flexible 5-minute rule (stop on progress and warnings, localize or divide), verify the artifact, autonomous series hand over a candidate, coordinator and worker rules, multi-agent resource limits.
+- Added to the Codex catalog with a root `plugin.json`; the implementer and critic agents are Claude Code only, Codex uses the skills.
+
 ## 0.3.0
 
 - Workstreams and pull requests replace "one small pull request per change" and "squash merge only": a branch is a workstream with several tasks; a cleanup pass regroups the work commits into the fewest meaningful commits before the pull request and after each fix round (non-interactive, `--force-with-lease` on the pull request's branch only); one pull request per topic; the merge method is a profile field (default: rebase merge); before a release, open small items are offered for inclusion.

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.0
+
+Reworked around three ways of working: headless scripts for analysis and checks, a separate GUI-macro run for files a person opens, and MCP for the live window only. "MCP-preferred execution" is dropped.
+
+- New skill `freecad-zone-edit`: local edits to a finished solid with zone guards and a guards reference.
+- New skill `freecad-headless-analysis`: numeric headless checks and measurements, a quiet wrapper `fc-quiet.sh`, collision-scope and section-example references.
+- New skill `freecad-gui-macro`: a template macro run as a separate GUI process (when to use it; input left unchanged; the process ends by itself).
+- New agent `freecad-worker` (Claude Code only): headless executor for one local CAD round.
+- Reworked `cad-print-workflow`, `freecad-mcp-operations` (MCP is the live-window route; Apache-2.0 notice kept, changed files marked), `freecad-rib-engineering` (new `fdm-defaults.md`) and `bambu-print-preparation`.
+- Removed the reference `rib-selection-and-modeling-guide.md`; `rib-design.md` supersedes it.
+- Removed the wording that treats an external production suite as an installed dependency.
+- The print-mesh guard has one scope everywhere: zones or check boxes during a round, the whole body once at round closure.
+- Run-limit rules have one source, `guarding-autonomous-runs` (plugin dv-agent-controller; install it as well); a parametric FCStd for a person is edited and saved in a GUI-macro run.
+
 ## 1.3.0
 
 - Add local refinement rounds to the existing CAD workflow: minimal edits, mandatory local checks and one full relevant validation at explicit round closure.

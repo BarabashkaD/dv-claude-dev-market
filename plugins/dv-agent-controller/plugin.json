@@ -1,0 +1,33 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dv-agent-controller",
+  "version": "0.4.0",
+  "description": "Controller + subagents development policy: a fresh agent per task, tiered critical reviews, budget-first briefs, file-based reports and handovers, guarded autonomous runs, and STOP gates for outward writes.",
+  "author": {
+    "name": "BarabashkaD"
+  },
+  "repository": "https://github.com/BarabashkaD/dv-claude-dev-market",
+  "keywords": [
+    "subagents",
+    "orchestration",
+    "controller",
+    "code-review",
+    "workflow",
+    "token-budget",
+    "handover"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Agent Controller",
+        "shortDescription": "Controller and subagents development policy",
+        "longDescription": "Three documentation-only skills: a controller loop with a fresh agent per task and tiered reviews, agent brief templates, and rules for long or unattended runs. The generic implementer and critic agents are Claude Code only; in Codex use the skills.",
+        "developerName": "BarabashkaD",
+        "category": "Engineering",
+        "defaultPrompt": [
+          "Use the Agent Controller skills to run this multi-task development plan with fresh agents per task."
+        ]
+      }
+    }
+  }
+}

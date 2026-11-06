@@ -1,7 +1,7 @@
 {
   "name": "dv-agent-controller",
-  "version": "0.3.0",
-  "description": "Controller + subagents development policy: a fresh agent per task, tiered critical reviews, budget-first briefs, file-based reports and handovers, a ledger and a decisions log, and STOP gates for outward writes.",
+  "version": "0.4.0",
+  "description": "Controller + subagents development policy: a fresh agent per task, tiered critical reviews, budget-first briefs, file-based reports and handovers, guarded autonomous runs, a ledger and a decisions log, and STOP gates for outward writes.",
   "author": {
     "name": "BarabashkaD"
   },

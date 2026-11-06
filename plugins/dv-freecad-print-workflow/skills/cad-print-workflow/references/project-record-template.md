@@ -8,6 +8,7 @@ Use only fields needed by the project. Keep this in the project workspace, not i
 - Reference assembly/revision, units and coordinate placement:
 - Preserved dimensions/interfaces and design constraints:
 - Current baseline / recoverable checkpoint:
+- Autonomy granted by the user (none / autonomous series to a candidate) and its limits:
 
 ## Decisions
 
@@ -30,6 +31,7 @@ For each unresolved or consequential choice:
 
 - Goal and included changes:
 - Protected geometry / excluded scope:
+- Way of working per step (headless script / GUI-macro run / MCP live window):
 - Checks and affected evidence to invalidate:
 - Result, remaining findings and new revision:
 

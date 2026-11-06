@@ -3,7 +3,7 @@
 Current sequencing: finish the FreeCAD design round before Bambu Studio print preparation. Any slicing/printed-path checks below belong to that later stage, not a mandatory intermediate CAD gate. Use the active SKILL.md and current project decisions for execution and scope.
 
 
-Configurable package guidance. Applies to enclosure split decisions, plastic mating geometry and integral clips. Screws, metal inserts/nuts, separate latches/locks and adhesive joining remain separate topics. Existing engineering projects and upstream suite files are unchanged. No completed CAD/print qualification of this interface family is claimed.
+Configurable package guidance. Applies to enclosure split decisions, plastic mating geometry and integral clips. Screws, metal inserts/nuts, separate latches/locks and adhesive joining remain separate topics. Existing engineering projects are unchanged. Default fits and minimum sizes: [FDM defaults](fdm-defaults.md). No completed CAD/print qualification of this interface family is claimed.
 
 For user discussion, show the saved [nine-example image](../assets/enclosure-interfaces/overview-01-09.png) and refer to its panel numbers. The [parameter review for all nine examples](enclosure-interface-parameters.md) defines editable dimensions, dependencies and checks. The image illustrates concepts; it is not a dimensioned or validated CAD model.
 
