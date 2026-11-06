@@ -4,7 +4,7 @@ Current sequencing: finish the FreeCAD design round before Bambu Studio print pr
 
 
 
-Status: configurable engineering guidance. End-to-end CAD, slicing and physical qualification have not been performed for this package. Consult the [engineering entrypoint](../SKILL.md) and preserve upstream suite files.
+Status: configurable engineering guidance. End-to-end CAD, slicing and physical qualification have not been performed for this package. Consult the [engineering entrypoint](../SKILL.md) and the [FDM defaults](fdm-defaults.md).
 
 For plastic screw bosses, screw-channel columns, nut-pocket carriers and insert carriers, apply the finalized [screw-feature support rules](screw-feature-supports.md). That reference defines gusset counts, H/L, zero-height floor runouts and the R1-linked radius defaults.
 
@@ -98,7 +98,7 @@ Each driving value needs a source or an explicit concept assumption. Derive repe
 7. **Protect functional features.** Preserve bores, nut pockets, screw seats, locating faces and assembly paths. Inspect the final result after any later cuts; a cut can remove a root blend or split a rib.
 8. **Recompute and exercise parameters.** Check nominal dimensions plus relevant limits of panel size, rib width, height and spacing. Inspect the final Body tip, solid count, connections and minimum clearances after every consequential change.
 
-Use the installed production suite's modeling guidance with the current MCP-preferred execution policy in the sibling `freecad-mcp-operations` skill. Preserve editable native FCStd features and deterministic inputs when an exceptional script is justified. No additional CAD server is needed.
+Model with native editable features and deterministic inputs. Execution follows the three ways of working in [cad-print-workflow](../../cad-print-workflow/SKILL.md): headless scripts for geometry and checks, a separate GUI-macro run for files a person will open, MCP only for the user's live window. Step 8 applies to a parametric model; in a copy of an accepted assembly, replace shapes without recompute. No additional CAD server is needed.
 
 ## 6. Join ribs to surfaces and objects
 
@@ -122,9 +122,9 @@ The configurable [corner-support defaults](corner-supports.md) also inform struc
 
 Use separate outcomes for geometry, printing and mechanical performance:
 
-- **Geometry:** expected connected solid per manufactured part; recompute and validity/BOP checks; preserved interfaces and clearances; parameter changes remain valid. Check root blend envelopes as well as web width.
+- **Geometry:** expected connected solid per manufactured part; validity checks (`check(True)` on the changed features, the whole body only when allowed); preserved interfaces and clearances against the exported neighbouring parts; parameter changes remain valid. Check root blend envelopes as well as web width.
 - **Printing:** actual slicer paths at webs, roots, ends and intersections; intact panel skins; feasible overhangs and supports; useful build orientation. Record explicitly when slicing was not performed.
-- **Mechanical:** compare against the stated load/deflection/strength requirements using justified calculations, verified analysis and/or physical tests. Use the suite's engineering-analysis workflow for such claims. Unknown loading or printed properties leave performance unresolved.
+- **Mechanical:** compare against the stated load/deflection/strength requirements using justified calculations, verified analysis and/or physical tests. Record the analysis inputs and method. Unknown loading or printed properties leave performance unresolved.
 
 For a comparative trial, use the same support/load conditions and report material volume/mass, sliced time, clearances, deformation and observed failure behavior. Include a thicker plain panel where appropriate. Keep equivalent-volume and equivalent-print-time comparisons distinct when they cannot both be matched.
 

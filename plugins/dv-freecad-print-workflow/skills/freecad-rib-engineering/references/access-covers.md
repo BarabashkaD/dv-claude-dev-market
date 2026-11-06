@@ -3,7 +3,7 @@
 Current sequencing: finish the FreeCAD design round before Bambu Studio print preparation. Any slicing/printed-path checks below belong to that later stage, not a mandatory intermediate CAD gate. Use the active SKILL.md and current project decisions for execution and scope.
 
 
-Configurable package guidance. Use with the unchanged FreeCAD production suite and the existing [plastic-interface rules](enclosure-interfaces.md). This guidance records options and visual discussion preferences, not a validated component library or authorization to alter unrelated projects.
+Configurable package guidance. Use with the existing [plastic-interface rules](enclosure-interfaces.md) and the [FDM defaults](fdm-defaults.md). This guidance records options and visual discussion preferences, not a validated component library or authorization to alter unrelated projects.
 
 ## Preferred simple removable-cover example
 
@@ -11,7 +11,7 @@ The default discussion example is a small flat cover inspired by an OKW battery-
 
 The preferred example is a thin rounded rectangular plate, a shallow locating rim, two locating tabs at one end and a small integral releasable snap tongue at the other. It favors simple compact geometry without large external clasps or bulky added mechanisms. It is a discussion reference rather than a universal prescription. The hidden catch in the illustration is proposed geometry; it is not a verified reproduction of the manufacturer's mechanism. Define the actual spring root, free length, catch engagement and release clearance before treating it as a working design. A rigid nub with no credible flex path is insufficient.
 
-The package favors simple, compact cover examples by default; sliding, L-profile or bulkier concepts remain available when project requirements justify them. A cover can have an L profile if the opening genuinely crosses an edge, but an L-shaped cover and an L-shaped spring are different choices. Do not assume that the default flat-cover example implies a hinge or that a regular lid must be hinged.
+The package favors simple, compact cover examples by default; sliding, L-profile or bulkier concepts remain available when project requirements justify them. A cover can have an L profile if the opening genuinely crosses an edge, but an L-shaped cover and an L-shaped spring are different choices. Do not assume that the default flat-cover example implies a hinge or that a regular lid must be hinged. A design option the user rejected is not offered again as a default unless the user reopens it.
 
 ## User discussion and selection
 
@@ -31,7 +31,7 @@ Use stable datums and named parameters; derive mating geometry from the chosen f
 
 Keep supporting borders and ledges intentional. Apply rounded structural roots where appropriate without consuming mating lands, spring free motion or hinge running clearance. Structural screw-gusset/R1 defaults do not automatically govern flexible clips, flexures or bearings. Required material, opening frequency/cycle target, temperature and retention requirements govern detailed sizing; no universal numerical dimensions or lifetime are adopted.
 
-Use production-suite parametric modeling, assembly, additive-manufacturing and analysis workflows for the actual design. Check final solids, fit, engagement, insertion/removal, complete motion and relevant parameter limits. Inspect actual slicer paths and representative clip/fit trials before claiming reliable printing or repeated use. Report geometric, print and life/retention evidence separately. Snap retention does not automatically imply sealing, deliberate hold-open behavior or a load rating.
+Model the actual design with native editable features; execution follows the three ways of working in [cad-print-workflow](../../cad-print-workflow/SKILL.md): headless scripts for geometry and checks, a separate GUI-macro run for files a person will open, MCP only for the user's live window. Check by numbers: final solids, fit, latch engagement, assembly deflection and the free room for it, insertion/removal, complete motion and relevant parameter limits. Inspect actual slicer paths and representative clip/fit trials before claiming reliable printing or repeated use. Report geometric, print and life/retention evidence separately. Snap retention does not automatically imply sealing, deliberate hold-open behavior or a load rating.
 
 ## Primary reference
 

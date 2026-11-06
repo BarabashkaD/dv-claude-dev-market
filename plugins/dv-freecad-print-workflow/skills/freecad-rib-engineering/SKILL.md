@@ -1,17 +1,17 @@
 ---
 name: freecad-rib-engineering
-description: Apply configurable FreeCAD FDM enclosure defaults for splits, plastic interfaces, removable and attached access covers, integral clips, ventilation, PCB mounting and case fastening, ribs, gussets and rounded screw supports. Complements the installed FreeCAD production suite with illustrated selection and editable local design rules.
+description: Apply configurable FreeCAD FDM enclosure defaults: minimum features and fits for a 0.4 mm nozzle, build order, snap latches, case splits, access covers, ventilation, PCB mounting, case fastening, ribs, gussets, with illustrated option sheets for user discussion. Use when designing or revising a 3D-printed enclosure or its features. Not the edit or check technique (freecad-zone-edit, freecad-headless-analysis, freecad-gui-macro) and not slicing (bambu-print-preparation).
 ---
 
 # FreeCAD enclosure and rib engineering
 
-This package supplies configurable enclosure-interface, ventilation, rib-selection and structural-joint defaults. Current project requirements and explicit user choices override these defaults. Use [cad-print-workflow](../cad-print-workflow/SKILL.md) for stage transitions and shared decisions. Use the installed FreeCAD production suite for detailed engineering methods, without changing its upstream files. These local preferences are not general manufacturing standards. Load only relevant references; preserve project-specific decisions over illustrative examples.
+This skill supplies configurable FDM, enclosure-interface, ventilation, rib-selection and structural-joint defaults. Current project requirements and explicit user choices override them; they are not general manufacturing standards. Use [cad-print-workflow](../cad-print-workflow/SKILL.md) for stages, rounds and shared decisions, and its three ways of working for execution (headless scripts, a separate GUI-macro run, MCP only for the user's live window). Load only the relevant references; preserve project decisions over illustrative examples.
 
 Complete the FreeCAD design round before Bambu Studio preparation. Print-aware design is required, but repeated intermediate slicing is not. Slicing requirements in older references apply only after the CAD-ready gate. Existing case choices are not automatically imposed on unrelated products.
 
 ## Always begin with a quick visual draft, then user direction
 
-When starting a case or exploring a new enclosure design direction, always show a fast first visual overview of basic concepts before extensive research or detailed modeling. This ordering precedes the feature-specific questionnaires below. Inspect only the available model, established constraints and relevant saved examples needed to make that first overview meaningful. Use simple envelope/block models, rough 3D views or existing suitable concept pictures; when source geometry is unavailable, label the overview generic and its dimensions provisional. The first draft communicates direction, not a finished or validated enclosure.
+When starting a case or exploring a new enclosure design direction, always show a fast first visual overview (pictures are for discussion with the person; analysis of the model stays numeric) of basic concepts before extensive research or detailed modeling. This ordering precedes the feature-specific questionnaires below. Inspect only the available model, established constraints and relevant saved examples needed to make that first overview meaningful. Use simple envelope/block models, rough 3D views or existing suitable concept pictures; when source geometry is unavailable, label the overview generic and its dimensions provisional. The first draft communicates direction, not a finished or validated enclosure.
 
 Show a small useful comparison, normally two or three simple alternatives. Where coverage is the unresolved choice, illustrate a full enclosure, a compact enclosure with selected protrusions/exposed functions, or a hybrid envelope. Keep the alternatives simple and case-relevant rather than researching or rendering every possible feature. Reuse the user's supplied examples and accepted pictures where they fit.
 
@@ -20,6 +20,16 @@ After showing the overview, ask for the user's preferred option or direction and
 Reuse earlier choices and delegated design authority. Still provide the early visual overview, but do not repeat answered questions or turn an already authorized, fully specified design into a new mandatory approval step. Apply this rule to new case/concept exploration; routine edits to an established design do not require restarting concept selection. Record the chosen direction and newly supplied constraints for later stages.
 
 The [enclosure-startup and coverage research draft](references/enclosure-startup-and-coverage.md) records proposed full, compact and hybrid envelope choices for a supplied device model. It remains a discussion draft, not an adopted detailed sizing standard or validated algorithm. Use it to clarify unresolved user direction without silently promoting all proposed rules. Qualify its labels as **coverage C1/C2/C3** to distinguish them from **rib-connection C1/C2/C3** in the rib reference.
+
+## FDM defaults and build order
+
+Read [references/fdm-defaults.md](references/fdm-defaults.md) before sizing features. In short (defaults; confirm the nozzle and printer per project, the 0.4 mm nozzle is an assumption):
+
+- No feature thinner than the nozzle (0.4 mm), preferably 0.8 mm or more; fits use the default per-side clearances in the reference; a pocket for an inserted item has its own clearance parameter.
+- Real dimensions and envelopes of purchased components (body, connector travel, cable bend, tool access) are checked before modelling around them.
+- Fillet first, then cut. A failed fillet means find the cause, not shrink the radius.
+- Chamfers instead of fillets on bed-facing and downward outer edges, chosen for the intended print orientation.
+- Snap latches: define the engagement, check the assembly deflection against the material, and keep free room for that deflection.
 
 ## Enclosure split and plastic mating interfaces
 
@@ -33,7 +43,7 @@ For selected geometry, read [references/enclosure-interface-parameters.md](refer
 
 For component/cable access covers, read [references/access-covers.md](references/access-covers.md). Use the packaged thin flat snap-fit cover as the preferred removable-cover discussion example, not a compulsory geometry for every project. Distinguish access-cover shape, captive connection, closed-position catch and hold-open function.
 
-For covers that stay attached, read [references/attached-cover-connections.md](references/attached-cover-connections.md). The active choices are H1 pin hinge, H2 snap-in cylindrical pivot, H3 living hinge, H7 integral ball and retaining socket, and H8 concealed spring-retractable pivot candidate. Keep identifiers stable. H4–H6 are outside the default shortlist, not prohibited; include them when project requirements justify them. No connection is preselected for a project.
+For covers that stay attached, read [references/attached-cover-connections.md](references/attached-cover-connections.md). The active choices are H1 pin hinge, H2 snap-in cylindrical pivot, H3 living hinge, H7 integral ball and retaining socket, and H8 concealed spring-retractable pivot candidate. Keep identifiers stable. H4–H6 are set aside by default: do not offer them unless the user or the project explicitly reopens them. No connection is preselected for a project.
 
 **During a relevant discussion or when explanation is needed, show the saved 3D draft views linked in the references.** Show the preferred removable cover, H1–H3 sheet or H7 view as applicable. H8 has no saved picture yet: generate a clearly labeled case-relevant draft if requested or needed, distinguishing spring-arm and separate-spring versions. Do not depict an exposed fixed pivot as a concealed retractable one. Use exact CAD sections where a concept picture would mislead, preserve user simplicity preferences and keep sizes project-specific. No illustration is validated CAD or proof of retention/life.
 
@@ -45,7 +55,7 @@ For enclosure ventilation, read [references/ventilation-design.md](references/ve
 
 Define editable pattern dimensions, borders, keep-outs, remaining webs and passage clearances for the actual neighborhood. For tilted passages, define tilt from the inward normal (zero is perpendicular), lean azimuth, profile measurement plane and entry anchor. Derive the complementary surface angle, exit displacement and passage length where applicable; check entry/exit footprints and the full depth for interference and thin sections. Slot rotation, hood angle and passage tilt are different parameters.
 
-Protect the established rib/gusset, clip, mating, hardware and component envelopes. Apply the package rounded structural-root defaults where new load-bearing supports are introduced, preserving intended openings and flexible clip motion. Dimensions and angular limits remain case-specific. Use the production suite for editable CAD, additive-manufacturing review and supported thermal/flow analysis; report geometry, slicing and cooling evidence separately. The packaged examples have not completed representative CAD, print or thermal trials and do not establish a cooling or protection rating.
+Protect the established rib/gusset, clip, mating, hardware and component envelopes. Apply the package rounded structural-root defaults where new load-bearing supports are introduced, preserving intended openings and flexible clip motion. Dimensions and angular limits remain case-specific. Thermal or flow claims need their own analysis or temperature tests; report geometry, slicing and cooling evidence separately. The packaged examples have not completed representative CAD, print or thermal trials and do not establish a cooling or protection rating.
 
 ## Select ribs for the specific case
 
@@ -74,14 +84,20 @@ Read [references/screw-feature-supports.md](references/screw-feature-supports.md
 
 Expose attachment height H (absolute or percentage mode) and floor runout L, plus configurable count, orientation, thickness and reach. Reconsider preferred model values at each location. Free floor ends must reach zero added height with a horizontal tangent and no step. R1 is the master joint radius; link R2, R3 and R4 to R1 by default. Record necessary local overrides and preserve all functional hardware surfaces and clearances. These defaults belong to screw-feature support design; they are not universal dimensions or a strength qualification.
 
-## Model and verify through the suite
+## Model and verify
 
 Before introducing a new construction method or responding to a version-related failure, follow [current documentation and capability checks](../cad-print-workflow/references/current-documentation.md). Verify native high-level FreeCAD options and official recommended usage for the installed version; do not treat an MCP gap as a missing application feature. Routine repetition of an already verified method does not require renewed research.
 
-Use `freecad-production-suite:freecad-parametric-modeling` for stable datums, editable parameters, additive features, patterns and robust regeneration. Keep one intended contiguous manufactured solid per Body. MCP is the strongly preferred route, not an absolute prohibition on scripts. Follow [freecad-mcp-operations](../freecad-mcp-operations/SKILL.md) for bounded exceptions and live-document operation. Skill installation supplies guidance, not standing execution authorization.
+- New parametric design: native editable FreeCAD features with stable datums, named parameters, patterns and robust regeneration; one intended contiguous manufactured solid per Body.
+- A parametric FCStd that a person will open is edited and saved in a `freecad-gui-macro` run (its modify step); headless alone delivers BREP/STEP or edits a copy that a GUI-macro run then opens, checks and saves.
+- Local changes to a finished or imported solid: the zone method (`freecad-zone-edit`).
+- Checks by numbers, headless (`freecad-headless-analysis`): `check(True)` on the changed zones or new features, on the whole body only when allowed; collisions only against exported physical parts, never every document object; a closed print mesh.
+- MCP (`freecad-mcp-operations`) only for the user's live window.
+- Run limits: `guarding-autonomous-runs` (plugin dv-agent-controller).
+- Skill installation supplies guidance, not standing execution authorization.
 
-During CAD design, choose provisional printable widths from the intended material, nozzle/process and existing validated experience; choose height/spacing from the load case, available envelope and comparison. Verify actual generated paths later during print preparation, without inserting a slicing gate into each design step. Numerical examples in the reference are exploration values, not mandatory defaults. Do not impose injection-molding rib ratios on FDM.
+During CAD design, choose provisional printable widths from the intended material, nozzle/process and existing validated experience; choose height/spacing from the load case, available envelope and comparison. Verify actual generated paths later during print preparation, without inserting a slicing gate into each design step. Numerical rib examples (widths, heights, radii) are exploration values, not mandatory defaults; the starting values in [FDM defaults](references/fdm-defaults.md) are defaults a project may override. Do not impose injection-molding rib ratios on FDM.
 
-Use the suite's additive-manufacturing/DFM guidance for printing and its engineering-analysis skill when claiming stiffness, strength, buckling resistance or life. Report geometry, slicing and mechanical evidence separately. A valid solid or completed simulation alone does not prove physical reliability. The packaged reference has not completed a representative end-to-end CAD/print trial.
+Claims of stiffness, strength, buckling resistance or life need a justified calculation, an analysis whose inputs are recorded, or physical tests. Report geometry, slicing and mechanical evidence separately; unperformed checks are NOT RUN. A valid solid or completed simulation alone does not prove physical reliability. The packaged reference has not completed a representative end-to-end CAD/print trial.
 
 Deliver the selected type and reason, parameters, connection map, native model and checks appropriate to the authorized task. Installing this skill does not authorize changing unrelated projects, committing or publishing.

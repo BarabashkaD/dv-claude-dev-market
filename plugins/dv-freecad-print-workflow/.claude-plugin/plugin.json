@@ -1,7 +1,7 @@
 {
   "name": "dv-freecad-print-workflow",
-  "version": "1.3.0",
-  "description": "Sequential FreeCAD design and Bambu Studio print preparation with configurable enclosure engineering guidance and MCP-preferred execution.",
+  "version": "2.0.0",
+  "description": "Sequential FreeCAD design and Bambu Studio print preparation with configurable enclosure engineering guidance: headless analysis and zone edits, a GUI macro for files a person opens, and MCP for the live window.",
   "author": {
     "name": "BarabashkaD"
   },

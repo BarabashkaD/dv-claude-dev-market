@@ -7,7 +7,7 @@ Configurable package discussion options; engineering models remain unvalidated. 
 
 ## Saved 3D discussion examples
 
-Show the active examples during concept discussion: [H1–H3: pin, snap-in and living hinges](../assets/access-covers/attached-covers-h1-h3.png) and [H7: integral ball pivot with retaining socket](../assets/access-covers/attached-cover-h7-ball-pivot.png). Preserve these identifiers to avoid confusion. H4–H6 are outside the default shortlist but may be included when justified by the project. The views show proposed open arrangements and simplified enlarged joint details; exact assembly compliance, retention, stops, mating sections, closed configurations and clearances must be designed and checked in CAD. Drawn open poses do not establish friction or hold-open capability. H1's extended pin and H2's separated pivot in the detail views explain assembly; the main views represent retained connections.
+Show the active examples during concept discussion: [H1–H3: pin, snap-in and living hinges](../assets/access-covers/attached-covers-h1-h3.png) and [H7: integral ball pivot with retaining socket](../assets/access-covers/attached-cover-h7-ball-pivot.png). Preserve these identifiers to avoid confusion. H4–H6 are set aside by default and offered only when the user or the project explicitly reopens them. The views show proposed open arrangements and simplified enlarged joint details; exact assembly compliance, retention, stops, mating sections, closed configurations and clearances must be designed and checked in CAD. Drawn open poses do not establish friction or hold-open capability. H1's extended pin and H2's separated pivot in the detail views explain assembly; the main views represent retained connections.
 
 Separate three functions: the connection that keeps the cover captive, the catch that retains it closed, and any stop/detent/friction that limits motion or holds it open. A hinge alone does not imply hold-open behavior. A tether can prevent loss without guiding the lid.
 
@@ -69,4 +69,4 @@ Treat closed-envelope concealment, motion clearance and spring actuation as sepa
 
 - [igus polymer ball-and-socket joint](https://www.igus.com/product/igubal-WGRM_WGLM) provides a primary example of polymer ball/socket components for rotation and swiveling. Its separate commercial components, proprietary materials and performance do not validate the proposed integral printed H7 geometry.
 
-The active discussion identifiers are H1, H2, H3, H7 and H8, with H4–H6 set aside. Dimensions, retention and life remain unvalidated until an actual design and appropriate trials exist.
+The active discussion identifiers are H1, H2, H3, H7 and H8, with H4–H6 set aside by default (see above). Dimensions, retention and life remain unvalidated until an actual design and appropriate trials exist.

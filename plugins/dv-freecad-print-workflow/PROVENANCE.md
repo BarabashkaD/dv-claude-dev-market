@@ -1,14 +1,19 @@
 # Public provenance and licensing
 
-Package status: 1.2.0 is an evolving, incomplete skill collection. Static checks and manual review do not establish live FreeCAD/Bambu qualification.
+Package status: 2.0.0 is an evolving, incomplete skill collection. Static checks and manual review do not establish live FreeCAD/Bambu qualification.
 
 ## Historical adaptation and licensing
 
 The `freecad-mcp-operations` skill preserves material historically adapted from [Qwen-MM-Plugins](https://github.com/QwenLM/Qwen-MM-Plugins/blob/ce46a1eb4e4ff81ed9ff4518e16901d840509d54/src/capabilities/freecad/skill/SKILL.md), pinned at upstream commit `ce46a1eb4e4ff81ed9ff4518e16901d840509d54`. Its original Apache-2.0 [LICENSE](skills/freecad-mcp-operations/LICENSE) is retained unchanged. The [historical modification notice](skills/freecad-mcp-operations/references/provenance.md) describes that adaptation. This is attribution and licensing context only; it is not a Qwen runtime dependency or installation instruction.
 
-## External methodological reference
+Modified in 2.0.0: `skills/freecad-mcp-operations/SKILL.md` was reworked (MCP is the route for the user's live window; headless scripts and a separate GUI macro cover the rest) and `skills/freecad-mcp-operations/references/provenance.md` gained a 2.0.0 modification note. The retained LICENSE file is unchanged. Changes are marked as required by Apache-2.0 section 4(b).
 
-[FreeCAD Production Suite](https://github.com/vindu939/freecad-skills), reference version 1.3.0, commit `a0df95b0445bdf9432aab12d4533ec3fa6baec09`, supplies complementary methods when available. Its code is not bundled or modified. This reference does not claim live compatibility or full upstream validation.
+## Ideas inspired by, no text copied
+
+Some practices in this release were inspired by ideas in the following projects. No text, code or structure was copied from them, and they are not dependencies.
+
+- [flowful-ai/cad-skill](https://github.com/flowful-ai/cad-skill)
+- [FreeCAD Production Suite](https://github.com/vindu939/freecad-skills)
 
 ## Original materials and images
 

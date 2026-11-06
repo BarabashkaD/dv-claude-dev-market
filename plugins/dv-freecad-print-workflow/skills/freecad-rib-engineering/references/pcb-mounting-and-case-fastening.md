@@ -3,7 +3,7 @@
 Current sequencing: finish the FreeCAD design round before Bambu Studio print preparation. Any slicing/printed-path checks below belong to that later stage, not a mandatory intermediate CAD gate. Use the active SKILL.md and current project decisions for execution and scope.
 
 
-Configurable package guidance. Applies to new designs and authorized revisions; it does not authorize changing an existing PCB or enclosure. Use the production suite for engineering and verification. These selection and geometry rules are not physical validation.
+Configurable package guidance. Applies to new designs and authorized revisions; it does not authorize changing an existing PCB or enclosure. Check the result by numbers in headless runs (clearances, interference against the exported board and neighbouring parts). These selection and geometry rules are not physical validation.
 
 Before positioning PCB supports, screw holders or inserts, distinguish **PCB retention** from **enclosure closure**. Present these two architectures when the choice remains unresolved. Reuse established user decisions.
 

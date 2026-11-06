@@ -4,7 +4,7 @@ Use this reference when selecting a new modeling method, introducing a tool not 
 
 ## Establish the relevant version and application
 
-Record the installed application's exact version/build and, separately, the MCP bridge/tool version or exposed schema. Distinguish the application that owns the work: FreeCAD for the mechanical model; KiCad only when the authorized task actually involves KiCad or ECAD changes. A correct supplied STEP assembly may be used as reference geometry without reopening PCB design or invoking KiCad.
+Record the installed application's exact version/build (and the OpenCASCADE version for geometry checks) and, separately, the MCP bridge/tool version or exposed schema when MCP is used. Distinguish the application that owns the work: FreeCAD for the mechanical model; KiCad only when the authorized task actually involves KiCad or ECAD changes. A correct supplied STEP assembly may be used as reference geometry without reopening PCB design or invoking KiCad.
 
 Before selecting a new construction method, check version-relevant official documentation for the available built-in high-level features and recommended workflow. Compare the relevant native alternatives before assuming a bespoke script or low-level geometry generator is necessary. A missing MCP tool does not imply the feature is absent from FreeCAD or KiCad; conversely, an application feature does not prove the bridge exposes it.
 
@@ -29,4 +29,4 @@ Keep a short method decision in the project record:
 
 Reuse this evidence for repeated operations under the same relevant version and conditions. Recheck after application/bridge updates, a materially new method, changed assumptions, conflicting documentation, or an unexpected failure. Do not repeatedly interrupt the user or browse anew for every Pad, pattern instance or routine dimension change.
 
-Prefer the verified native high-level route through MCP. If the native feature is not exposed by the bridge, assess a bounded script invoking native features under the execution policy rather than rebuilding the model point by point. Documentation verification does not itself authorize installing software, changing settings or expanding the task.
+Prefer a verified native high-level FreeCAD feature over rebuilding geometry point by point. Run it the way the step needs (see the three ways of working in [cad-print-workflow](../SKILL.md)): a headless script for geometry and checks, a separate GUI-macro run for files a person will open, MCP only when the user's live window is needed. A tool the bridge does not expose may still exist in FreeCAD. Documentation verification does not itself authorize installing software, changing settings or expanding the task.

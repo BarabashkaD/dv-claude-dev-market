@@ -1,10 +1,12 @@
 # dv-agent-controller
 
-A development policy for Claude Code: one session acts as the **controller**, and every task runs in a fresh subagent. The controller dispatches, adjudicates reviews and keeps records. Agents write their work to files and reply in 3 lines.
+A development policy for Claude Code (the skills also work in Codex): one session acts as the **controller**, and every task runs in a fresh subagent. The controller dispatches, adjudicates reviews and keeps records. Agents write their work to files and reply in 3 lines.
 
-It is documentation only: two skills and two agent definitions. No hooks, no scripts, no dependencies.
+It is documentation only: three skills and two agent definitions. No hooks, no scripts, no dependencies.
 
 ## Install
+
+In Codex the plugin is in the repository's native catalog (`.agents/plugins/marketplace.json`); the `implementer` and `critic` agents are Claude Code only, Codex uses the skills.
 
 ```text
 /plugin marketplace add BarabashkaD/dv-claude-dev-market
@@ -17,6 +19,7 @@ It is documentation only: two skills and two agent definitions. No hooks, no scr
 |---|---|
 | Skill `controlling-subagent-development` | The controller's loop: classify, brief, dispatch, review by tier, decide, log. Limits, STOP gates, restart and status tick. Templates for the project profile, the ledger line, the decision entry and the controller handover. |
 | Skill `writing-agent-briefs` | The brief and dispatch-prompt shape, with templates for task, fix, continuation, cleanup, review and verifier briefs. |
+| Skill `guarding-autonomous-runs` | Rules for long or unattended runs: the flexible 5-minute rule (stop on progress and warnings, localize or divide), verify the artifact, autonomous series hand over a candidate, coordinator and worker rules, multi-agent resource limits. |
 | Agent `implementer` | Implements, fixes or checks one task. Budget first, batch test rule, handover at ~45 calls. |
 | Agent `critic` | Read-only reviewer, re-reviewer or arbiter. Writes one review file with a verdict, C/I/M counts and file:line evidence. |
 
