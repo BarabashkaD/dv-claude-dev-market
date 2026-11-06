@@ -16,3 +16,4 @@ jobs:
       - run: python -m pytest tools/tests
       - run: bash plugins/dv-freecad-print-workflow/skills/freecad-headless-analysis/tests/test_fc_quiet.sh
       - run: python -m pytest plugins/dv-freecad-print-workflow/skills/freecad-gui-macro/tests
+      - run: python -m pytest plugins/dv-public-repo-guard/skills/public-repo-guard/tests

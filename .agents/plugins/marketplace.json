@@ -27,6 +27,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Engineering"
+    },
+    {
+      "name": "dv-public-repo-guard",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dv-public-repo-guard"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Engineering"
     }
   ]
 }

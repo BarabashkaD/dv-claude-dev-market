@@ -41,6 +41,22 @@
       "source": "./plugins/dv-clangd-guard"
     },
     {
+      "name": "dv-public-repo-guard",
+      "description": "Pre-commit guard for public repositories: blocks absolute home paths and e-mail addresses in staged text files, in zip-based files (FCStd, 3mf, Office, OpenDocument, epub) and in PNG/JPEG metadata. Stdlib-only checker, hook template and a PNG text-chunk stripper.",
+      "version": "0.1.0",
+      "category": "tooling",
+      "keywords": [
+        "privacy",
+        "personal-data",
+        "pre-commit",
+        "git-hooks",
+        "public-repository",
+        "image-metadata",
+        "tooling"
+      ],
+      "source": "./plugins/dv-public-repo-guard"
+    },
+    {
       "name": "tech-doc-to-markdown",
       "description": "Convert technical documentation (datasheets, reference and service manuals, schematics, standards, application notes) from PDF, scanned PDF, DjVu, DOC/DOCX, RTF, ODT, EPUB or page images into faithful, verified Markdown where tables, block diagrams, timing diagrams, bit fields, pinouts, register maps and dot patterns become text. Classifies the document first, then runs the transcription in a dedicated cold-context subagent, verifies it with self-check scripts and an adversarial fidelity review, and can split a long document into an index plus parts.",
       "version": "1.0.1",
