@@ -1,0 +1,33 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dv-public-repo-guard",
+  "version": "0.1.0",
+  "description": "Pre-commit guard for public repositories: blocks absolute home paths and e-mail addresses in staged text files, in zip-based files (FCStd, 3mf, Office, OpenDocument, epub) and in PNG/JPEG metadata. Stdlib-only checker, hook template and a PNG text-chunk stripper.",
+  "author": {
+    "name": "BarabashkaD"
+  },
+  "repository": "https://github.com/BarabashkaD/dv-claude-dev-market",
+  "keywords": [
+    "privacy",
+    "personal-data",
+    "pre-commit",
+    "git-hooks",
+    "public-repository",
+    "image-metadata",
+    "tooling"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Public Repo Guard",
+        "shortDescription": "Block home paths and e-mail addresses before they reach a public repository",
+        "longDescription": "One skill with a standard-library Python checker and a pre-commit hook template: scans staged text files, members of zip-based files (FCStd, 3mf, docx, xlsx, pptx, odt, epub, zip) and PNG/JPEG metadata for absolute home paths and e-mail addresses, plus a stripper for PNG text chunks.",
+        "developerName": "BarabashkaD",
+        "category": "Engineering",
+        "defaultPrompt": [
+          "Use the Public Repo Guard skill to set up a pre-commit personal-data check for this public repository."
+        ]
+      }
+    }
+  }
+}

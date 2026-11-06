@@ -19,9 +19,9 @@ Then install a plugin from it:
 ## ChatGPT Desktop and Codex
 
 This repository also includes a native repo marketplace at
-`.agents/plugins/marketplace.json`. It lists `dv-freecad-print-workflow` and
-`dv-agent-controller`; the Claude-compatible marketplace above retains the
-full repository catalog.
+`.agents/plugins/marketplace.json`. It lists `dv-freecad-print-workflow`,
+`dv-agent-controller` and `dv-public-repo-guard`; the Claude-compatible
+marketplace above retains the full repository catalog.
 
 For the native route, add the repository marketplace with
 `codex plugin marketplace add BarabashkaD/dv-claude-dev-market`, restart the
@@ -46,6 +46,7 @@ route and a standalone `.agents/skills` route; hosts do not merge duplicates.
 |---|---|
 | [`python-venv-manager`](plugins/python-venv-manager) | One virtual environment per skill under a per-user Claude venvs directory, reused across sessions and projects instead of rebuilt each time. Includes a `PreToolUse` hook that blocks bare `python`/`pip` invocations. Linux, macOS, Windows. |
 | [`dv-clangd-guard`](plugins/dv-clangd-guard) | Fail-closed CMake compile-database freshness guard for Claude Code's official `clangd-lsp` provider. Requires a separately installed `clangd` executable and an explicit project profile. |
+| [`dv-public-repo-guard`](plugins/dv-public-repo-guard) | Pre-commit guard for public repositories: refuses commits that put absolute home paths or e-mail addresses into text files, zip-based files (FCStd, 3mf, Office, OpenDocument, epub) or PNG/JPEG metadata. Stdlib-only checker, hook template, PNG text-chunk stripper. |
 
 ### CAD and 3D printing
 
@@ -71,8 +72,9 @@ For this plugin, `category` is marketplace-entry metadata only. Its plugin manif
 
 The native ChatGPT Desktop/Codex integration additionally uses
 `.agents/plugins/marketplace.json` and a portable `plugin.json` at the root
-of the FreeCAD and agent-controller plugins. The native catalog lists only those
-two packages; the legacy Claude catalog remains the full repository list.
+of the FreeCAD, agent-controller and public-repo-guard plugins. The native
+catalog lists only those three packages; the legacy Claude catalog remains the
+full repository list.
 
 Each plugin lives under `plugins/<plugin-name>/` and is registered in
 `.claude-plugin/marketplace.json`.
